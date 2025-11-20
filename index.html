@@ -1,0 +1,3123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VINE CONCURSOS IA - Seu Aliado nos Estudos</title>
+    <meta name="description" content="Assistente inteligente para preparação em concursos públicos com análise de editais, cronogramas, flashcards e muito mais">
+    <meta name="theme-color" content="#00d9ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VINE IA">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- PDF.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #151b3d;
+            --bg-tertiary: #1e2749;
+            --accent-primary: #00d9ff;
+            --accent-secondary: #7c3aed;
+            --accent-warm: #f59e0b;
+            --text-primary: #e8eaed;
+            --text-secondary: #9ca3af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #2d3657;
+        }
+
+        .light {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f3f4f6;
+            --accent-primary: #0891b2;
+            --accent-secondary: #7c3aed;
+            --accent-warm: #ea580c;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --success: #059669;
+            --danger: #dc2626;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--accent-primary);
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-secondary);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+        }
+
+        .timer-display {
+            font-size: 72px;
+            text-align: center;
+            margin: 30px 0;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent-primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Outfit', sans-serif;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .flashcard {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 30px 0;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .flashcard:hover {
+            border-color: var(--accent-primary);
+            transform: scale(1.02);
+        }
+
+        .flashcard-content {
+            font-size: 24px;
+            line-height: 1.6;
+        }
+
+        .flashcard-hint {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .flashcard-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .flashcard-item {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .flashcard-item-content {
+            flex: 1;
+        }
+
+        .flashcard-item strong {
+            color: var(--accent-primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--bg-tertiary);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .question-card {
+            background: var(--bg-tertiary);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 15px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .option:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .option.selected {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+
+        .option.incorrect {
+            border-color: var(--danger);
+            background: var(--danger);
+            color: white;
+        }
+
+        .result-message {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .result-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .result-info {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+            border: 2px solid var(--accent-primary);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .ai-response {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            line-height: 1.8;
+        }
+
+        .ai-response h3 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            color: var(--text-secondary);
+        }
+
+        .saved-item {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .saved-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .saved-item-title {
+            font-weight: 600;
+            color: var(--accent-primary);
+            font-size: 16px;
+        }
+
+        .saved-item-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .saved-item-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .timer-display {
+                font-size: 56px;
+            }
+
+            .flashcard-content {
+                font-size: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>📚 VINE CONCURSOS IA</h1>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="edital">📋 Análise de Edital</button>
+                <button class="tab-btn" data-tab="cronograma">📅 Cronograma</button>
+                <button class="tab-btn" data-tab="pomodoro">⏱️ Pomodoro</button>
+                <button class="tab-btn" data-tab="leitor">🎧 Leitor de Texto</button>
+                <button class="tab-btn" data-tab="flashcards">🎴 Flashcards</button>
+                <button class="tab-btn" data-tab="simulado">📝 Simulado</button>
+                <button class="tab-btn" data-tab="estatisticas">📊 Estatísticas</button>
+                <button class="tab-btn" data-tab="ajuda">❓ Como Instalar</button>
+            </div>
+        </header>
+
+        <!-- TAB: ANÁLISE DE EDITAL -->
+        <div id="edital" class="tab-content active">
+            <div class="card">
+                <h2>Analisar Edital com IA</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Arraste um PDF do edital ou cole o texto diretamente. A IA irá analisar e extrair informações importantes.
+                </p>
+
+                <!-- PDF Upload Area -->
+                <div id="pdfDropArea" style="border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; margin-bottom: 20px; background: var(--bg-tertiary); cursor: pointer; transition: all 0.3s ease;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+                    <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Arraste o PDF do edital aqui</p>
+                    <p style="color: var(--text-secondary); font-size: 14px;">ou clique para selecionar o arquivo</p>
+                    <input type="file" id="pdfFileInput" accept=".pdf" style="display: none;">
+                </div>
+
+                <div style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                    <strong>━━━━━ OU ━━━━━</strong>
+                </div>
+
+                <div class="input-group">
+                    <label>Texto do Edital ou Pergunta</label>
+                    <textarea id="editalInput" placeholder="Cole o edital completo ou parte dele, ou faça perguntas como: 'Quais são as disciplinas de maior peso?', 'Qual o cronograma previsto?', etc."></textarea>
+                </div>
+                <button class="btn" id="analyzeEdital">🤖 Analisar com IA</button>
+                <div id="editalOutput" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="card">
+                <h2>Análises Salvas</h2>
+                <div id="savedEditalList"></div>
+            </div>
+        </div>
+
+        <!-- TAB: CRONOGRAMA -->
+        <div id="cronograma" class="tab-content">
+            <div class="card">
+                <h2>Gerar Cronograma de Estudos com IA</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Preencha as informações abaixo e deixe a IA criar um cronograma personalizado de estudos.
+                </p>
+                <div class="input-group">
+                    <label>Nome do Concurso</label>
+                    <input type="text" id="concursoNome" placeholder="Ex: TRT-SP - Analista Judiciário">
+                </div>
+                <div class="input-group">
+                    <label>Data da Prova</label>
+                    <input type="date" id="dataProva">
+                </div>
+                <div class="input-group">
+                    <label>Horas disponíveis por dia para estudo</label>
+                    <input type="number" id="horasDia" value="4" min="1" max="24">
+                </div>
+                <div class="input-group">
+                    <label>Matérias do Edital (uma por linha)</label>
+                    <textarea id="materiasEdital" placeholder="Direito Constitucional&#10;Direito Administrativo&#10;Português&#10;Raciocínio Lógico"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Seu nível de conhecimento atual</label>
+                    <select id="nivelConhecimento">
+                        <option value="iniciante">Iniciante</option>
+                        <option value="intermediario">Intermediário</option>
+                        <option value="avancado">Avançado</option>
+                    </select>
+                </div>
+                <button class="btn" id="generateCronograma">🤖 Gerar Cronograma com IA</button>
+                <div id="cronogramaOutput" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="card">
+                <h2>Meus Cronogramas</h2>
+                <div id="savedCronogramaList"></div>
+            </div>
+        </div>
+
+        <!-- TAB: POMODORO -->
+        <div id="pomodoro" class="tab-content">
+            <div class="card">
+                <h2>Timer Pomodoro</h2>
+                <div class="timer-display mono" id="timerDisplay">25:00</div>
+
+                <div class="btn-group">
+                    <button class="btn" id="startTimer">▶️ Iniciar</button>
+                    <button class="btn btn-secondary" id="pauseTimer">⏸️ Pausar</button>
+                    <button class="btn btn-secondary" id="resetTimer">🔄 Resetar</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Tempo de Foco (minutos)</label>
+                    <input type="number" id="focusTime" value="25" min="1" max="60">
+                </div>
+
+                <div class="input-group">
+                    <label>Tempo de Pausa (minutos)</label>
+                    <input type="number" id="breakTime" value="5" min="1" max="30">
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress" style="width: 0%">0%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Meta Diária</h2>
+                <div class="input-group">
+                    <label>Pomodoros hoje: <span class="mono" id="todayPomodoros">0</span> / <span id="goalDisplay">8</span></label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="goalProgress" style="width: 0%">0%</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Meta diária de Pomodoros</label>
+                    <input type="number" id="dailyGoal" value="8" min="1" max="20">
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: LEITOR DE TEXTO -->
+        <div id="leitor" class="tab-content">
+            <div class="card">
+                <h2>🎧 Leitor de Texto (Text-to-Speech)</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Converta textos de PDFs ou anotações em áudio para estudar em qualquer lugar. Ajuste a velocidade para otimizar seu tempo de estudo!
+                </p>
+
+                <div class="input-group">
+                    <label>Texto para Leitura</label>
+                    <textarea id="textToRead" placeholder="Cole aqui o texto do PDF, edital ou suas anotações..." style="min-height: 200px;"></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" id="startReading">▶️ Ler Texto</button>
+                    <button class="btn btn-secondary" id="pauseReading">⏸️ Pausar</button>
+                    <button class="btn btn-secondary" id="stopReading">⏹️ Parar</button>
+                </div>
+
+                <div class="input-group" style="margin-top: 30px;">
+                    <label>Voz:</label>
+                    <select id="voiceSelect" style="width: 100%; margin-bottom: 15px;">
+                        <option value="">Voz padrão do sistema</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Velocidade de Leitura: <span id="speedLabel" class="mono" style="color: var(--accent-primary);">1.0x</span></label>
+                    <input type="range" id="readingSpeed" min="0.5" max="4" step="0.1" value="1" style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; color: var(--text-secondary); font-size: 12px;">
+                        <span>0.5x</span>
+                        <span>1.0x</span>
+                        <span>2.0x</span>
+                        <span>3.0x</span>
+                        <span>4.0x</span>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 20px; border-radius: 8px; margin-top: 20px; color: white;">
+                    <h3 style="margin-bottom: 10px;">💡 Dicas para Otimizar o Estudo</h3>
+                    <ul style="line-height: 1.8; margin-left: 20px;">
+                        <li><strong>Velocidade 0.5x-0.8x:</strong> Ideal para conteúdos difíceis ou primeira leitura</li>
+                        <li><strong>Velocidade 1.0x:</strong> Velocidade normal de conversação</li>
+                        <li><strong>Velocidade 1.5x-2.0x:</strong> Ótimo para revisões e economizar tempo</li>
+                        <li><strong>Use fones Bluetooth:</strong> Estude enquanto caminha, dirige ou faz exercícios</li>
+                        <li><strong>Divida textos longos:</strong> Processe em partes para melhor absorção</li>
+                    </ul>
+                </div>
+
+                <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent-warm);">
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        <strong style="color: var(--accent-warm);">⚠️ Nota:</strong> A síntese de voz é processada pelo navegador (offline). A qualidade e as vozes disponíveis dependem do seu sistema operacional e navegador.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: FLASHCARDS -->
+        <div id="flashcards" class="tab-content">
+            <div class="card">
+                <h2>Adicionar Flashcard</h2>
+                <div class="input-group">
+                    <label>Matéria</label>
+                    <input type="text" id="flashcardSubject" placeholder="Ex: Direito Constitucional">
+                </div>
+                <div class="input-group">
+                    <label>Pergunta</label>
+                    <textarea id="flashcardQuestion" placeholder="Digite a pergunta..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Resposta</label>
+                    <textarea id="flashcardAnswer" placeholder="Digite a resposta..."></textarea>
+                </div>
+                <button class="btn" id="addFlashcard">➕ Adicionar Flashcard</button>
+            </div>
+
+            <div class="card">
+                <h2>Revisar Flashcards</h2>
+                <div id="flashcardReview"></div>
+            </div>
+
+            <div class="card">
+                <h2>Meus Flashcards</h2>
+                <div id="flashcardList"></div>
+            </div>
+        </div>
+
+        <!-- TAB: SIMULADO -->
+        <div id="simulado" class="tab-content">
+            <div class="card">
+                <h2>Adicionar Questão</h2>
+                <div class="input-group">
+                    <label>Matéria</label>
+                    <input type="text" id="questionSubject" placeholder="Ex: Português">
+                </div>
+                <div class="input-group">
+                    <label>Enunciado</label>
+                    <textarea id="questionText" placeholder="Digite o enunciado da questão..."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Opção A</label>
+                    <input type="text" id="optionA" placeholder="Opção A">
+                </div>
+                <div class="input-group">
+                    <label>Opção B</label>
+                    <input type="text" id="optionB" placeholder="Opção B">
+                </div>
+                <div class="input-group">
+                    <label>Opção C</label>
+                    <input type="text" id="optionC" placeholder="Opção C">
+                </div>
+                <div class="input-group">
+                    <label>Opção D</label>
+                    <input type="text" id="optionD" placeholder="Opção D">
+                </div>
+                <div class="input-group">
+                    <label>Resposta Correta</label>
+                    <select id="correctAnswer">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <button class="btn" id="addQuestion">➕ Adicionar Questão</button>
+            </div>
+
+            <div class="card">
+                <h2>Realizar Simulado</h2>
+                <div id="simuladoArea"></div>
+            </div>
+        </div>
+
+        <!-- TAB: ESTATÍSTICAS -->
+        <div id="estatisticas" class="tab-content">
+            <div class="card">
+                <h2>Suas Estatísticas</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Pomodoros</div>
+                        <div class="stat-value" id="totalPomodoros">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Tempo Total de Estudo</div>
+                        <div class="stat-value" id="totalStudyTime">0h</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Flashcards Criados</div>
+                        <div class="stat-value" id="totalFlashcards">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Questões Criadas</div>
+                        <div class="stat-value" id="totalQuestions">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Simulados Realizados</div>
+                        <div class="stat-value" id="totalSimulados">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Taxa de Acerto</div>
+                        <div class="stat-value" id="accuracyRate">0%</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger" id="clearData" style="margin-top: 20px;">🗑️ Limpar Todos os Dados</button>
+            </div>
+        </div>
+
+        <!-- TAB: AJUDA/INSTALAÇÃO -->
+        <div id="ajuda" class="tab-content">
+            <div class="card">
+                <h2>📲 Como Instalar o App no Celular</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Transforme o VINE CONCURSOS IA em um app nativo! Siga os passos abaixo de acordo com seu dispositivo:
+                </p>
+
+                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: var(--accent-primary); margin-bottom: 15px;">🤖 Android (Chrome)</h3>
+                    <ol style="line-height: 2; color: var(--text-primary);">
+                        <li>Abra este site no <strong>Google Chrome</strong></li>
+                        <li>Toque no menu <strong>⋮</strong> (três pontos) no canto superior direito</li>
+                        <li>Selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar app"</strong></li>
+                        <li>Confirme tocando em <strong>"Adicionar"</strong></li>
+                        <li>✅ Pronto! O ícone aparecerá na sua tela inicial</li>
+                    </ol>
+                </div>
+
+                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: var(--accent-primary); margin-bottom: 15px;">🍎 iOS (iPhone/iPad)</h3>
+                    <ol style="line-height: 2; color: var(--text-primary);">
+                        <li>Abra este site no <strong>Safari</strong></li>
+                        <li>Toque no botão <strong>Compartilhar</strong> ⬆️ (na barra inferior)</li>
+                        <li>Role para baixo e toque em <strong>"Adicionar à Tela de Início"</strong></li>
+                        <li>Edite o nome se quiser e toque em <strong>"Adicionar"</strong></li>
+                        <li>✅ Pronto! O app estará disponível como qualquer outro</li>
+                    </ol>
+                </div>
+
+                <div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 20px; border-radius: 8px; margin: 20px 0; color: white;">
+                    <h3 style="margin-bottom: 15px;">✨ Vantagens do App Instalado</h3>
+                    <ul style="line-height: 2;">
+                        <li>🚀 <strong>Acesso rápido</strong> - Ícone na tela inicial</li>
+                        <li>📴 <strong>Funciona offline</strong> - Use sem internet</li>
+                        <li>💾 <strong>Dados salvos</strong> - Tudo persiste localmente</li>
+                        <li>📱 <strong>Tela cheia</strong> - Sem barra do navegador</li>
+                        <li>⚡ <strong>Mais rápido</strong> - Carregamento instantâneo</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🤖 Recursos com IA</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    As funcionalidades de <strong>Análise de Edital</strong> e <strong>Geração de Cronograma</strong> usam Inteligência Artificial.
+                </p>
+                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px;">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 10px;">📋 Para usar a IA:</h4>
+                    <ol style="line-height: 2; color: var(--text-primary);">
+                        <li>Publique este app no <a href="https://poe.com" target="_blank" style="color: var(--accent-primary);">Poe.com</a> (gratuito)</li>
+                        <li>A IA funcionará automaticamente quando acessado via Poe</li>
+                        <li>Ou use as outras funcionalidades offline (Pomodoro, Flashcards, Simulados)</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💡 Compartilhar com Amigos</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Quer compartilhar o VINE CONCURSOS IA com seus colegas de estudos?
+                </p>
+                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px;">
+                    <p style="line-height: 1.8; color: var(--text-primary); margin-bottom: 15px;">
+                        <strong>Opção 1:</strong> Hospede gratuitamente em <a href="https://netlify.com/drop" target="_blank" style="color: var(--accent-primary);">Netlify</a> ou <a href="https://vercel.com" target="_blank" style="color: var(--accent-primary);">Vercel</a>
+                        <br>Você terá um link permanente para compartilhar: <code style="background: var(--bg-secondary); padding: 2px 8px; border-radius: 4px;">https://vine-concursos.netlify.app</code>
+                    </p>
+                    <p style="line-height: 1.8; color: var(--text-primary);">
+                        <strong>Opção 2:</strong> Publique no Poe.com como Canvas App
+                        <br>Todos que tiverem conta Poe poderão usar com IA integrada!
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>ℹ️ Informações do Sistema</h2>
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-label">Status do PWA</div>
+                        <div class="stat-value" id="pwaStatus" style="font-size: 24px;">❓</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Armazenamento</div>
+                        <div class="stat-value" id="storageStatus" style="font-size: 24px;">❓</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Service Worker</div>
+                        <div class="stat-value" id="swStatus" style="font-size: 24px;">❓</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">API Poe</div>
+                        <div class="stat-value" id="poeStatus" style="font-size: 24px;">❓</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirmar ação</h3>
+            <p id="modalMessage">Tem certeza que deseja continuar?</p>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="modalCancel">Cancelar</button>
+                <button class="btn btn-danger" id="modalConfirm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detect color scheme
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.remove('light');
+        } else {
+            document.documentElement.classList.add('light');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+            }
+        });
+
+        // Data Management - Hybrid storage (memory + localStorage when available)
+        const memoryStore = {};
+        let useLocalStorage = false;
+
+        // Check if localStorage is available
+        try {
+            const testKey = '__storage_test__';
+            window.localStorage.setItem(testKey, 'test');
+            window.localStorage.removeItem(testKey);
+            useLocalStorage = true;
+            console.log('✅ localStorage disponível - dados serão persistidos');
+        } catch (e) {
+            console.log('⚠️ localStorage não disponível - usando memória temporária');
+        }
+
+        const Storage = {
+            get(key, defaultValue = null) {
+                if (useLocalStorage) {
+                    try {
+                        const data = window.localStorage.getItem('vine_' + key);
+                        return data ? JSON.parse(data) : defaultValue;
+                    } catch (e) {
+                        return memoryStore[key] !== undefined ? memoryStore[key] : defaultValue;
+                    }
+                }
+                return memoryStore[key] !== undefined ? memoryStore[key] : defaultValue;
+            },
+            set(key, value) {
+                memoryStore[key] = value;
+                if (useLocalStorage) {
+                    try {
+                        window.localStorage.setItem('vine_' + key, JSON.stringify(value));
+                    } catch (e) {
+                        console.error('Storage error:', e);
+                    }
+                }
+            },
+            remove(key) {
+                delete memoryStore[key];
+                if (useLocalStorage) {
+                    try {
+                        window.localStorage.removeItem('vine_' + key);
+                    } catch (e) {
+                        console.error('Storage error:', e);
+                    }
+                }
+            },
+            clear() {
+                Object.keys(memoryStore).forEach(key => delete memoryStore[key]);
+                if (useLocalStorage) {
+                    try {
+                        Object.keys(window.localStorage).forEach(key => {
+                            if (key.startsWith('vine_')) {
+                                window.localStorage.removeItem(key);
+                            }
+                        });
+                    } catch (e) {
+                        console.error('Storage error:', e);
+                    }
+                }
+            }
+        };
+
+        // Tab Navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabName = btn.dataset.tab;
+
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                btn.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+            });
+        });
+
+        // POMODORO TIMER
+        let timerInterval = null;
+        let timeLeft = 25 * 60;
+        let totalTime = 25 * 60;
+        let isBreak = false;
+        let pomodorosToday = Storage.get('pomodorosToday', { date: new Date().toDateString(), count: 0 });
+
+        // Reset counter if new day
+        if (pomodorosToday.date !== new Date().toDateString()) {
+            pomodorosToday = { date: new Date().toDateString(), count: 0 };
+            Storage.set('pomodorosToday', pomodorosToday);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            const progress = ((totalTime - timeLeft) / totalTime) * 100;
+            const progressBar = document.getElementById('sessionProgress');
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${Math.round(progress)}%`;
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+
+                    if (!isBreak) {
+                        // Pomodoro completed
+                        pomodorosToday.count++;
+                        Storage.set('pomodorosToday', pomodorosToday);
+                        updatePomodoroStats();
+
+                        // Increment total pomodoros
+                        const stats = Storage.get('stats', {});
+                        stats.totalPomodoros = (stats.totalPomodoros || 0) + 1;
+                        stats.totalStudyTime = (stats.totalStudyTime || 0) + parseInt(document.getElementById('focusTime').value);
+                        Storage.set('stats', stats);
+
+                        showNotification('✅ Pomodoro concluído! Hora de uma pausa.');
+
+                        // Switch to break
+                        isBreak = true;
+                        const breakMinutes = parseInt(document.getElementById('breakTime').value);
+                        timeLeft = breakMinutes * 60;
+                        totalTime = breakMinutes * 60;
+                    } else {
+                        showNotification('🎯 Pausa concluída! Pronto para mais um Pomodoro?');
+                        isBreak = false;
+                        resetTimer();
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            isBreak = false;
+            const focusMinutes = parseInt(document.getElementById('focusTime').value);
+            timeLeft = focusMinutes * 60;
+            totalTime = focusMinutes * 60;
+            updateTimerDisplay();
+        }
+
+        function updatePomodoroStats() {
+            const goal = parseInt(document.getElementById('dailyGoal').value);
+            document.getElementById('todayPomodoros').textContent = pomodorosToday.count;
+            document.getElementById('goalDisplay').textContent = goal;
+
+            const progress = Math.min((pomodorosToday.count / goal) * 100, 100);
+            const progressBar = document.getElementById('goalProgress');
+            progressBar.style.width = `${progress}%`;
+            progressBar.textContent = `${Math.round(progress)}%`;
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'result-message result-success';
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.left = '50%';
+            notification.style.transform = 'translateX(-50%)';
+            notification.style.zIndex = '2000';
+            notification.style.maxWidth = '500px';
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        document.getElementById('startTimer').addEventListener('click', startTimer);
+        document.getElementById('pauseTimer').addEventListener('click', pauseTimer);
+        document.getElementById('resetTimer').addEventListener('click', resetTimer);
+        document.getElementById('focusTime').addEventListener('change', resetTimer);
+        document.getElementById('breakTime').addEventListener('change', () => {
+            if (isBreak) {
+                const breakMinutes = parseInt(document.getElementById('breakTime').value);
+                timeLeft = breakMinutes * 60;
+                totalTime = breakMinutes * 60;
+                updateTimerDisplay();
+            }
+        });
+        document.getElementById('dailyGoal').addEventListener('change', updatePomodoroStats);
+
+        updateTimerDisplay();
+        updatePomodoroStats();
+
+        // TEXT READER (TTS)
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+        let isPaused = false;
+        let availableVoices = [];
+
+        // Load available voices
+        function loadVoices() {
+            availableVoices = speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = '<option value="">Voz padrão do sistema</option>';
+
+            // Filter Portuguese voices first, then all voices
+            const ptVoices = availableVoices.filter(voice => voice.lang.startsWith('pt'));
+            const otherVoices = availableVoices.filter(voice => !voice.lang.startsWith('pt'));
+
+            if (ptVoices.length > 0) {
+                const ptGroup = document.createElement('optgroup');
+                ptGroup.label = '🇧🇷 Vozes em Português';
+                ptVoices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    ptGroup.appendChild(option);
+                });
+                voiceSelect.appendChild(ptGroup);
+            }
+
+            if (otherVoices.length > 0) {
+                const otherGroup = document.createElement('optgroup');
+                otherGroup.label = '🌍 Outras vozes';
+                otherVoices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    otherGroup.appendChild(option);
+                });
+                voiceSelect.appendChild(otherGroup);
+            }
+        }
+
+        // Load voices on page load and when voices change
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        document.getElementById('startReading').addEventListener('click', () => {
+            const text = document.getElementById('textToRead').value.trim();
+
+            if (!text) {
+                showNotification('⚠️ Digite ou cole um texto primeiro!');
+                return;
+            }
+
+            // If paused, resume
+            if (isPaused && speechSynthesis.paused) {
+                speechSynthesis.resume();
+                isPaused = false;
+                showNotification('▶️ Leitura retomada');
+                return;
+            }
+
+            // If already speaking, resume
+            if (speechSynthesis.speaking) {
+                speechSynthesis.resume();
+                return;
+            }
+
+            // Create new utterance
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'pt-BR';
+            currentUtterance.rate = parseFloat(document.getElementById('readingSpeed').value);
+
+            // Set selected voice
+            const selectedVoiceName = document.getElementById('voiceSelect').value;
+            if (selectedVoiceName) {
+                const selectedVoice = availableVoices.find(voice => voice.name === selectedVoiceName);
+                if (selectedVoice) {
+                    currentUtterance.voice = selectedVoice;
+                }
+            }
+
+            currentUtterance.onstart = () => {
+                showNotification('🎧 Iniciando leitura...');
+            };
+
+            currentUtterance.onend = () => {
+                showNotification('✅ Leitura concluída!');
+                isPaused = false;
+            };
+
+            currentUtterance.onerror = (event) => {
+                showNotification('❌ Erro na leitura: ' + event.error);
+                isPaused = false;
+            };
+
+            speechSynthesis.speak(currentUtterance);
+        });
+
+        document.getElementById('pauseReading').addEventListener('click', () => {
+            if (speechSynthesis.speaking && !speechSynthesis.paused) {
+                speechSynthesis.pause();
+                isPaused = true;
+                showNotification('⏸️ Leitura pausada');
+            }
+        });
+
+        document.getElementById('stopReading').addEventListener('click', () => {
+            if (speechSynthesis.speaking || speechSynthesis.paused) {
+                speechSynthesis.cancel();
+                isPaused = false;
+                showNotification('⏹️ Leitura interrompida');
+            }
+        });
+
+        document.getElementById('readingSpeed').addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            document.getElementById('speedLabel').textContent = speed.toFixed(1) + 'x';
+
+            // Update speed in real-time if speaking
+            if (currentUtterance && speechSynthesis.speaking) {
+                // Need to restart with new speed
+                const text = document.getElementById('textToRead').value.trim();
+                const wasPaused = speechSynthesis.paused;
+
+                speechSynthesis.cancel();
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.lang = 'pt-BR';
+                currentUtterance.rate = speed;
+
+                if (!wasPaused) {
+                    speechSynthesis.speak(currentUtterance);
+                }
+            }
+        });
+
+        // FLASHCARDS
+        let flashcards = Storage.get('flashcards', []);
+        let currentFlashcardIndex = 0;
+        let showingAnswer = false;
+
+        function addFlashcard() {
+            const subject = document.getElementById('flashcardSubject').value.trim();
+            const question = document.getElementById('flashcardQuestion').value.trim();
+            const answer = document.getElementById('flashcardAnswer').value.trim();
+
+            if (!subject || !question || !answer) {
+                showNotification('⚠️ Preencha todos os campos do flashcard');
+                return;
+            }
+
+            flashcards.push({ subject, question, answer, id: Date.now() });
+            Storage.set('flashcards', flashcards);
+
+            document.getElementById('flashcardSubject').value = '';
+            document.getElementById('flashcardQuestion').value = '';
+            document.getElementById('flashcardAnswer').value = '';
+
+            renderFlashcards();
+            showNotification('✅ Flashcard adicionado com sucesso!');
+        }
+
+        function renderFlashcards() {
+            const listEl = document.getElementById('flashcardList');
+
+            if (flashcards.length === 0) {
+                listEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📚</div><p>Nenhum flashcard criado ainda.<br>Adicione seu primeiro flashcard acima!</p></div>';
+                document.getElementById('flashcardReview').innerHTML = '<div class="empty-state"><p>Adicione flashcards para começar a revisar</p></div>';
+                return;
+            }
+
+            listEl.innerHTML = '<div class="flashcard-list">' + flashcards.map((fc, idx) => `
+                <div class="flashcard-item">
+                    <div class="flashcard-item-content">
+                        <strong>${fc.subject}</strong>
+                        <div>${fc.question}</div>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteFlashcard(${idx})">🗑️</button>
+                </div>
+            `).join('') + '</div>';
+
+            renderFlashcardReview();
+        }
+
+        function renderFlashcardReview() {
+            const reviewEl = document.getElementById('flashcardReview');
+
+            if (flashcards.length === 0) {
+                reviewEl.innerHTML = '<div class="empty-state"><p>Adicione flashcards para começar a revisar</p></div>';
+                return;
+            }
+
+            const fc = flashcards[currentFlashcardIndex];
+
+            reviewEl.innerHTML = `
+                <div class="flashcard" onclick="flipFlashcard()">
+                    <div class="flashcard-content">
+                        ${showingAnswer ? fc.answer : fc.question}
+                    </div>
+                    <div class="flashcard-hint">
+                        ${showingAnswer ? '(Resposta)' : 'Clique para revelar a resposta'}
+                    </div>
+                </div>
+                <div style="text-align: center; color: var(--text-secondary); margin-bottom: 15px;">
+                    <strong>${fc.subject}</strong> - Flashcard ${currentFlashcardIndex + 1} de ${flashcards.length}
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="previousFlashcard()">⬅️ Anterior</button>
+                    <button class="btn" onclick="nextFlashcard()">Próximo ➡️</button>
+                </div>
+            `;
+        }
+
+        function flipFlashcard() {
+            showingAnswer = !showingAnswer;
+            renderFlashcardReview();
+        }
+
+        function nextFlashcard() {
+            showingAnswer = false;
+            currentFlashcardIndex = (currentFlashcardIndex + 1) % flashcards.length;
+            renderFlashcardReview();
+        }
+
+        function previousFlashcard() {
+            showingAnswer = false;
+            currentFlashcardIndex = (currentFlashcardIndex - 1 + flashcards.length) % flashcards.length;
+            renderFlashcardReview();
+        }
+
+        function deleteFlashcard(index) {
+            showConfirmDialog('Tem certeza que deseja excluir este flashcard?', () => {
+                flashcards.splice(index, 1);
+                Storage.set('flashcards', flashcards);
+                if (currentFlashcardIndex >= flashcards.length) {
+                    currentFlashcardIndex = Math.max(0, flashcards.length - 1);
+                }
+                renderFlashcards();
+                showNotification('🗑️ Flashcard excluído');
+            });
+        }
+
+        document.getElementById('addFlashcard').addEventListener('click', addFlashcard);
+        renderFlashcards();
+
+        // SIMULADO
+        let questions = Storage.get('questions', []);
+        let currentSimulado = null;
+        let simuladoAnswers = [];
+
+        function addQuestion() {
+            const subject = document.getElementById('questionSubject').value.trim();
+            const text = document.getElementById('questionText').value.trim();
+            const optionA = document.getElementById('optionA').value.trim();
+            const optionB = document.getElementById('optionB').value.trim();
+            const optionC = document.getElementById('optionC').value.trim();
+            const optionD = document.getElementById('optionD').value.trim();
+            const correct = document.getElementById('correctAnswer').value;
+
+            if (!subject || !text || !optionA || !optionB || !optionC || !optionD) {
+                showNotification('⚠️ Preencha todos os campos da questão');
+                return;
+            }
+
+            questions.push({
+                id: Date.now(),
+                subject,
+                text,
+                options: { A: optionA, B: optionB, C: optionC, D: optionD },
+                correct
+            });
+
+            Storage.set('questions', questions);
+
+            document.getElementById('questionSubject').value = '';
+            document.getElementById('questionText').value = '';
+            document.getElementById('optionA').value = '';
+            document.getElementById('optionB').value = '';
+            document.getElementById('optionC').value = '';
+            document.getElementById('optionD').value = '';
+
+            showNotification('✅ Questão adicionada com sucesso!');
+            renderSimulado();
+        }
+
+        function startSimulado() {
+            if (questions.length === 0) {
+                showNotification('⚠️ Adicione questões antes de iniciar um simulado');
+                return;
+            }
+
+            currentSimulado = [...questions].sort(() => Math.random() - 0.5);
+            simuladoAnswers = new Array(currentSimulado.length).fill(null);
+            renderSimulado();
+        }
+
+        function renderSimulado() {
+            const simuladoEl = document.getElementById('simuladoArea');
+
+            if (!currentSimulado) {
+                if (questions.length === 0) {
+                    simuladoEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>Nenhuma questão cadastrada.<br>Adicione questões acima para criar um simulado!</p></div>';
+                } else {
+                    simuladoEl.innerHTML = `
+                        <div style="text-align: center;">
+                            <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                                ${questions.length} questão(ões) disponível(is)
+                            </p>
+                            <button class="btn" onclick="startSimulado()">🚀 Iniciar Simulado</button>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            let html = '';
+            currentSimulado.forEach((q, idx) => {
+                html += `
+                    <div class="question-card" id="question-${idx}">
+                        <div style="color: var(--accent-secondary); font-weight: 600; margin-bottom: 10px;">
+                            ${q.subject} - Questão ${idx + 1}
+                        </div>
+                        <div class="question-text">${q.text}</div>
+                        <div class="options">
+                            ${['A', 'B', 'C', 'D'].map(opt => `
+                                <div class="option" onclick="selectOption(${idx}, '${opt}')" id="q${idx}-${opt}">
+                                    <strong>${opt})</strong> ${q.options[opt]}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '<div class="btn-group"><button class="btn" onclick="finishSimulado()">✅ Finalizar Simulado</button></div>';
+            simuladoEl.innerHTML = html;
+        }
+
+        function selectOption(questionIdx, option) {
+            simuladoAnswers[questionIdx] = option;
+
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+                const el = document.getElementById(`q${questionIdx}-${opt}`);
+                el.classList.remove('selected');
+            });
+
+            document.getElementById(`q${questionIdx}-${option}`).classList.add('selected');
+        }
+
+        function finishSimulado() {
+            const unanswered = simuladoAnswers.filter(a => a === null).length;
+
+            if (unanswered > 0) {
+                showConfirmDialog(
+                    `Você deixou ${unanswered} questão(ões) sem resposta. Deseja finalizar mesmo assim?`,
+                    () => gradeSimulado()
+                );
+            } else {
+                gradeSimulado();
+            }
+        }
+
+        function gradeSimulado() {
+            let correct = 0;
+
+            currentSimulado.forEach((q, idx) => {
+                const userAnswer = simuladoAnswers[idx];
+                const isCorrect = userAnswer === q.correct;
+
+                if (isCorrect) correct++;
+
+                ['A', 'B', 'C', 'D'].forEach(opt => {
+                    const el = document.getElementById(`q${idx}-${opt}`);
+                    el.classList.remove('selected');
+                    el.style.pointerEvents = 'none';
+
+                    if (opt === q.correct) {
+                        el.classList.add('correct');
+                    } else if (opt === userAnswer && !isCorrect) {
+                        el.classList.add('incorrect');
+                    }
+                });
+            });
+
+            const percentage = Math.round((correct / currentSimulado.length) * 100);
+
+            // Update stats
+            const stats = Storage.get('stats', {});
+            stats.totalSimulados = (stats.totalSimulados || 0) + 1;
+            stats.totalCorrect = (stats.totalCorrect || 0) + correct;
+            stats.totalAnswered = (stats.totalAnswered || 0) + currentSimulado.length;
+            Storage.set('stats', stats);
+            updateStats();
+
+            const resultMessage = document.createElement('div');
+            resultMessage.className = 'result-message result-success';
+            resultMessage.innerHTML = `
+                <strong>Simulado Finalizado!</strong><br>
+                Você acertou ${correct} de ${currentSimulado.length} questões (${percentage}%)
+            `;
+
+            document.getElementById('simuladoArea').insertBefore(
+                resultMessage,
+                document.getElementById('simuladoArea').firstChild
+            );
+
+            setTimeout(() => {
+                resultMessage.innerHTML += '<br><button class="btn btn-secondary" onclick="resetSimulado()" style="margin-top: 15px;">🔄 Novo Simulado</button>';
+            }, 1000);
+        }
+
+        function resetSimulado() {
+            currentSimulado = null;
+            simuladoAnswers = [];
+            renderSimulado();
+        }
+
+        document.getElementById('addQuestion').addEventListener('click', addQuestion);
+        renderSimulado();
+
+        // STATISTICS
+        function updateStats() {
+            const stats = Storage.get('stats', {});
+
+            document.getElementById('totalPomodoros').textContent = stats.totalPomodoros || 0;
+            document.getElementById('totalStudyTime').textContent =
+                Math.round((stats.totalStudyTime || 0) / 60) + 'h';
+            document.getElementById('totalFlashcards').textContent = flashcards.length;
+            document.getElementById('totalQuestions').textContent = questions.length;
+            document.getElementById('totalSimulados').textContent = stats.totalSimulados || 0;
+
+            const accuracy = stats.totalAnswered > 0
+                ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100)
+                : 0;
+            document.getElementById('accuracyRate').textContent = accuracy + '%';
+        }
+
+        updateStats();
+
+        // CLEAR DATA
+        document.getElementById('clearData').addEventListener('click', () => {
+            showConfirmDialog(
+                'Tem certeza que deseja apagar TODOS os dados? Esta ação não pode ser desfeita!',
+                () => {
+                    Storage.clear();
+                    location.reload();
+                }
+            );
+        });
+
+        // MODAL SYSTEM
+        let confirmCallback = null;
+
+        function showConfirmDialog(message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalMessage').textContent = message;
+            modal.classList.add('active');
+            confirmCallback = onConfirm;
+        }
+
+        document.getElementById('modalCancel').addEventListener('click', () => {
+            document.getElementById('confirmModal').classList.remove('active');
+            confirmCallback = null;
+        });
+
+        document.getElementById('modalConfirm').addEventListener('click', () => {
+            document.getElementById('confirmModal').classList.remove('active');
+            if (confirmCallback) {
+                confirmCallback();
+                confirmCallback = null;
+            }
+        });
+
+        // Close modal on background click
+        document.getElementById('confirmModal').addEventListener('click', (e) => {
+            if (e.target.id === 'confirmModal') {
+                document.getElementById('confirmModal').classList.remove('active');
+                confirmCallback = null;
+            }
+        });
+
+        // ANÁLISE DE EDITAL COM IA
+        let savedEditais = Storage.get('savedEditais', []);
+
+        // Register handlers for Poe Embed API
+        if (window.Poe) {
+            window.Poe.registerHandler("edital-handler", (result) => {
+                const msg = result.responses[0];
+                const outputEl = document.getElementById('editalOutput');
+
+                if (msg.status === "error") {
+                    outputEl.innerHTML = `<div class="result-message" style="background: var(--danger); color: white;">Erro: ${msg.statusText}</div>`;
+                } else if (msg.status === "incomplete") {
+                    outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Analisando edital...</div><div class="ai-response">${msg.content}</div>`;
+                } else if (msg.status === "complete") {
+                    outputEl.innerHTML = `<div class="ai-response">${msg.content}</div>`;
+
+                    // Save the analysis
+                    savedEditais.push({
+                        id: Date.now(),
+                        date: new Date().toLocaleString('pt-BR'),
+                        input: document.getElementById('editalInput').value.substring(0, 200) + '...',
+                        response: msg.content
+                    });
+                    Storage.set('savedEditais', savedEditais);
+                    renderSavedEditais();
+                }
+            });
+
+            window.Poe.registerHandler("cronograma-handler", (result) => {
+                const msg = result.responses[0];
+                const outputEl = document.getElementById('cronogramaOutput');
+
+                if (msg.status === "error") {
+                    outputEl.innerHTML = `<div class="result-message" style="background: var(--danger); color: white;">Erro: ${msg.statusText}</div>`;
+                } else if (msg.status === "incomplete") {
+                    outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Gerando cronograma personalizado...</div><div class="ai-response">${msg.content}</div>`;
+                } else if (msg.status === "complete") {
+                    outputEl.innerHTML = `<div class="ai-response">${msg.content}</div>`;
+
+                    // Save the cronograma
+                    const savedCronogramas = Storage.get('savedCronogramas', []);
+                    savedCronogramas.push({
+                        id: Date.now(),
+                        date: new Date().toLocaleString('pt-BR'),
+                        concurso: document.getElementById('concursoNome').value,
+                        response: msg.content
+                    });
+                    Storage.set('savedCronogramas', savedCronogramas);
+                    renderSavedCronogramas();
+                }
+            });
+        }
+
+        async function analyzeEdital() {
+            const input = document.getElementById('editalInput').value.trim();
+
+            if (!input) {
+                showNotification('⚠️ Digite o texto do edital ou faça uma pergunta');
+                return;
+            }
+
+            const outputEl = document.getElementById('editalOutput');
+            outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Analisando edital...</div>`;
+
+            // Try Poe API first
+            if (window.Poe) {
+                const prompt = `Você é um especialista em análise de editais de concursos públicos. Analise o seguinte texto/pergunta e forneça informações claras e organizadas:
+
+${input}
+
+Por favor, organize sua resposta de forma clara, destacando:
+- Disciplinas e conteúdos programáticos
+- Pesos e número de questões (se mencionado)
+- Datas importantes
+- Requisitos e informações relevantes
+- Dicas de estudo baseadas no edital`;
+
+                try {
+                    await window.Poe.sendUserMessage(`@Claude-Sonnet-4.5 ${prompt}`, {
+                        handler: "edital-handler",
+                        stream: true,
+                        openChat: false
+                    });
+                    return;
+                } catch (err) {
+                    console.log('Poe API não disponível, usando análise offline');
+                }
+            }
+
+            // Fallback: Offline intelligent analysis
+            setTimeout(() => {
+                try {
+                    console.log('Iniciando análise offline...');
+                    const analysis = analyzeEditalOffline(input);
+                    console.log('Análise básica concluída');
+
+                    // Extract data for additional features
+                    const foundSubjects = [];
+                    const commonSubjects = [
+                        'Português', 'Língua Portuguesa', 'Redação',
+                        'Matemática', 'Matemática Financeira',
+                        'Raciocínio Lógico', 'Lógica',
+                        'Informática', 'Noções de Informática',
+                        'Direito Constitucional', 'Constitucional',
+                        'Direito Administrativo', 'Administrativo',
+                        'Direito Penal', 'Penal',
+                        'Direito Processual Penal', 'Processual Penal',
+                        'Direito Civil', 'Civil',
+                        'Direito do Trabalho', 'Trabalho',
+                        'Direito Tributário', 'Tributário',
+                        'Direito Previdenciário', 'Previdenciário',
+                        'Contabilidade', 'Contabilidade Geral',
+                        'Administração', 'Administração Pública',
+                        'Economia', 'Atualidades', 'Conhecimentos Gerais',
+                        'Legislação', 'Estatística', 'Ética'
+                    ];
+
+                    commonSubjects.forEach(subject => {
+                        const regex = new RegExp(subject, 'gi');
+                        const matches = input.match(regex);
+                        if (matches && matches.length > 0 && !foundSubjects.includes(subject)) {
+                            foundSubjects.push(subject);
+                        }
+                    });
+
+                    console.log('Disciplinas encontradas:', foundSubjects);
+
+                    // Calculate days until exam
+                    let daysUntilExam = null;
+                    const provaRegex = /prova[^\n]{0,50}(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi;
+                    const provaMatch = input.match(provaRegex);
+                    if (provaMatch) {
+                        const dateStr = provaMatch[0].match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                        if (dateStr) {
+                            const parts = dateStr[0].split(/[\/\-]/);
+                            const examDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                            daysUntilExam = Math.ceil((examDate - new Date()) / (1000 * 60 * 60 * 24));
+                        }
+                    }
+
+                    console.log('Dias até a prova:', daysUntilExam);
+
+                    // Generate all sections with error handling
+                    let verticalizedSyllabus = '';
+                    let cyclicSchedule = '';
+                    let subjectSummary = '';
+
+                    try {
+                        console.log('Gerando edital verticalizado...');
+                        verticalizedSyllabus = foundSubjects.length > 0 ? generateVerticalizedSyllabus(input, foundSubjects) : '';
+                        console.log('✅ Edital verticalizado OK');
+                    } catch (e) {
+                        console.error('Erro no edital verticalizado:', e);
+                        verticalizedSyllabus = '<p style="color: var(--danger);">Erro ao gerar edital verticalizado</p>';
+                    }
+
+                    try {
+                        console.log('Gerando cronograma cíclico...');
+                        cyclicSchedule = foundSubjects.length > 0 ? generateCyclicSchedule(input, foundSubjects, daysUntilExam) : '';
+                        console.log('✅ Cronograma cíclico OK');
+                    } catch (e) {
+                        console.error('Erro no cronograma cíclico:', e);
+                        cyclicSchedule = '<p style="color: var(--danger);">Erro ao gerar cronograma</p>';
+                    }
+
+                    try {
+                        console.log('Gerando resumo dos assuntos...');
+                        subjectSummary = foundSubjects.length > 0 ? generateSubjectSummary(input, foundSubjects) : '';
+                        console.log('✅ Resumo dos assuntos OK');
+                    } catch (e) {
+                        console.error('Erro no resumo:', e);
+                        subjectSummary = '<p style="color: var(--danger);">Erro ao gerar resumo</p>';
+                    }
+
+                    console.log('Montando HTML final...');
+
+                    outputEl.innerHTML = `
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary);">
+                                        Velocidade da Leitura: <span id="analysisSpeedLabel" class="mono" style="color: var(--accent-primary);">1.0x</span>
+                                    </label>
+                                    <input type="range" id="analysisSpeed" min="0.5" max="4" step="0.1" value="1"
+                                        style="width: 100%;"
+                                        oninput="document.getElementById('analysisSpeedLabel').textContent = parseFloat(this.value).toFixed(1) + 'x'">
+                                    <div style="display: flex; justify-content: space-between; margin-top: 5px; color: var(--text-secondary); font-size: 12px;">
+                                        <span>0.5x</span>
+                                        <span>1.5x</span>
+                                        <span>2.5x</span>
+                                        <span>4.0x</span>
+                                    </div>
+                                </div>
+                                <button class="btn" onclick="ouvirAnalise()" style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <span id="ouvirIcon">🎧</span> <span id="ouvirText">Ouvir Análise</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ai-response" id="analysisContent">
+                            ${analysis}
+                            ${verticalizedSyllabus}
+                            ${cyclicSchedule}
+                            ${subjectSummary}
+                        </div>
+                    `;
+
+                    console.log('HTML inserido com sucesso!');
+
+                    // Save the analysis
+                    const fullAnalysis = analysis + verticalizedSyllabus + cyclicSchedule + subjectSummary;
+                    savedEditais.push({
+                        id: Date.now(),
+                        date: new Date().toLocaleString('pt-BR'),
+                        input: input.substring(0, 200) + '...',
+                        response: fullAnalysis
+                    });
+                    Storage.set('savedEditais', savedEditais);
+                    renderSavedEditais();
+
+                    showNotification('✅ Análise concluída com sucesso!');
+                    console.log('Análise completa finalizada!');
+
+                } catch (error) {
+                    console.error('ERRO na análise:', error);
+                    outputEl.innerHTML = `
+                        <div class="result-message" style="background: var(--danger); color: white;">
+                            ❌ Erro ao processar análise: ${error.message}
+                            <br><br>
+                            <small>Verifique o console (F12) para mais detalhes.</small>
+                        </div>
+                    `;
+                }
+            }, 800);
+        }
+
+        function analyzeEditalOffline(text) {
+            let html = '<h3>📋 Análise do Edital</h3>';
+
+            // Extract disciplines
+            const commonSubjects = [
+                'Português', 'Língua Portuguesa', 'Redação',
+                'Matemática', 'Matemática Financeira',
+                'Raciocínio Lógico', 'Lógica',
+                'Informática', 'Noções de Informática',
+                'Direito Constitucional', 'Constitucional',
+                'Direito Administrativo', 'Administrativo',
+                'Direito Penal', 'Penal',
+                'Direito Processual Penal', 'Processual Penal',
+                'Direito Civil', 'Civil',
+                'Direito do Trabalho', 'Trabalho',
+                'Direito Tributário', 'Tributário',
+                'Direito Previdenciário', 'Previdenciário',
+                'Contabilidade', 'Contabilidade Geral',
+                'Administração', 'Administração Pública',
+                'Economia', 'Atualidades', 'Conhecimentos Gerais',
+                'Legislação', 'Estatística', 'Ética'
+            ];
+
+            const foundSubjects = [];
+            const subjectDetails = {};
+
+            commonSubjects.forEach(subject => {
+                const regex = new RegExp(subject, 'gi');
+                const matches = text.match(regex);
+                if (matches && matches.length > 0) {
+                    const normalized = subject;
+                    if (!foundSubjects.includes(normalized)) {
+                        foundSubjects.push(normalized);
+
+                        // Try to find question count or weight
+                        const contextRegex = new RegExp(`${subject}[^\\n]{0,100}(\\d+)\\s*(questões|questão|pontos|pts)`, 'gi');
+                        const context = text.match(contextRegex);
+                        if (context) {
+                            subjectDetails[normalized] = context[0];
+                        }
+                    }
+                }
+            });
+
+            if (foundSubjects.length > 0) {
+                html += '<h4>📚 Disciplinas Identificadas:</h4><ul>';
+                foundSubjects.forEach(subject => {
+                    html += `<li><strong>${subject}</strong>`;
+                    if (subjectDetails[subject]) {
+                        html += ` - ${subjectDetails[subject]}`;
+                    }
+                    html += '</li>';
+                });
+                html += '</ul>';
+            }
+
+            // Extract dates with context
+            const dateRegex = /([^\n.!?]*?)(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})([^\n.!?]*?)[\n.!?]/gi;
+            const dateMatches = text.matchAll(dateRegex);
+            const datesWithContext = [];
+
+            for (const match of dateMatches) {
+                const before = match[1].trim();
+                const date = match[2];
+                const after = match[3].trim();
+
+                // Build context - get text before or after the date
+                let context = '';
+
+                // Common keywords for events
+                const eventKeywords = [
+                    'inscrição', 'inscrições', 'prova', 'exame', 'resultado',
+                    'publicação', 'divulgação', 'prazo', 'entrega', 'recurso',
+                    'edital', 'convocação', 'posse', 'nomeação', 'homologação'
+                ];
+
+                // Check before and after for event keywords
+                const fullContext = (before + ' ' + after).toLowerCase();
+                let foundEvent = false;
+
+                for (const keyword of eventKeywords) {
+                    if (fullContext.includes(keyword)) {
+                        // Extract a meaningful phrase
+                        const words = (before + ' ' + after).split(/\s+/);
+                        const relevantWords = words.slice(Math.max(0, words.length - 8), words.length);
+                        context = relevantWords.join(' ').replace(/[:\-,;]/g, '').trim();
+                        foundEvent = true;
+                        break;
+                    }
+                }
+
+                if (!foundEvent) {
+                    // If no keyword found, use the text before the date
+                    const words = before.split(/\s+/);
+                    context = words.slice(Math.max(0, words.length - 6)).join(' ').replace(/[:\-,;]/g, '').trim();
+                }
+
+                // Clean up context
+                if (context.length > 60) {
+                    context = context.substring(Math.max(0, context.length - 60));
+                }
+
+                datesWithContext.push({ date, context });
+            }
+
+            if (datesWithContext.length > 0) {
+                html += '<h4>📅 Datas Importantes:</h4><ul>';
+
+                // Remove duplicates
+                const uniqueDates = [];
+                const seenDates = new Set();
+
+                datesWithContext.forEach(item => {
+                    if (!seenDates.has(item.date)) {
+                        seenDates.add(item.date);
+                        uniqueDates.push(item);
+                    }
+                });
+
+                uniqueDates.forEach(item => {
+                    if (item.context && item.context.length > 2) {
+                        html += `<li><strong>${item.date}</strong> - ${item.context}</li>`;
+                    } else {
+                        html += `<li><strong>${item.date}</strong></li>`;
+                    }
+                });
+                html += '</ul>';
+            }
+
+            // Extract numbers (questões, vagas, etc)
+            const vagasRegex = /(\d+)\s*vagas?/gi;
+            const vagas = text.match(vagasRegex);
+            if (vagas) {
+                html += '<h4>👥 Vagas:</h4><ul>';
+                vagas.forEach(v => html += `<li>${v}</li>`);
+                html += '</ul>';
+            }
+
+            const questoesRegex = /(\d+)\s*questões?/gi;
+            const questoes = text.match(questoesRegex);
+            if (questoes) {
+                html += '<h4>📝 Questões:</h4><ul>';
+                questoes.forEach(q => html += `<li>${q}</li>`);
+                html += '</ul>';
+            }
+
+            // Intelligent Recommendations based on extracted data
+            html += '<h4>💡 Recomendações Personalizadas de Estudo:</h4>';
+
+            // Extract question counts per subject
+            const subjectWeights = [];
+            foundSubjects.forEach(subject => {
+                const regex = new RegExp(`${subject}[^\\n]{0,100}(\\d+)\\s*questões?`, 'gi');
+                const match = text.match(regex);
+                if (match) {
+                    const numberMatch = match[0].match(/(\d+)/);
+                    if (numberMatch) {
+                        subjectWeights.push({
+                            subject: subject,
+                            questions: parseInt(numberMatch[1])
+                        });
+                    }
+                }
+            });
+
+            // Sort by weight (most questions first)
+            subjectWeights.sort((a, b) => b.questions - a.questions);
+
+            // Calculate total questions
+            const totalQuestions = subjectWeights.reduce((sum, item) => sum + item.questions, 0);
+
+            // Calculate days until exam
+            let daysUntilExam = null;
+            const provaRegex = /prova[^\\n]{0,50}(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi;
+            const provaMatch = text.match(provaRegex);
+            if (provaMatch) {
+                const dateStr = provaMatch[0].match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
+                if (dateStr) {
+                    const parts = dateStr[0].split(/[\/\-]/);
+                    const examDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                    daysUntilExam = Math.ceil((examDate - new Date()) / (1000 * 60 * 60 * 24));
+                }
+            }
+
+            html += '<div style="background: var(--bg-elevated); padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
+
+            // Priority subjects based on weight
+            if (subjectWeights.length > 0) {
+                html += '<p style="margin-bottom: 10px;"><strong>📊 Priorização por Peso:</strong></p><ul>';
+
+                subjectWeights.slice(0, 5).forEach((item, idx) => {
+                    const percentage = ((item.questions / totalQuestions) * 100).toFixed(1);
+                    let priority = '';
+                    let emoji = '';
+
+                    if (percentage >= 20) {
+                        priority = 'PRIORIDADE MÁXIMA';
+                        emoji = '🔥';
+                    } else if (percentage >= 15) {
+                        priority = 'Alta prioridade';
+                        emoji = '⚡';
+                    } else if (percentage >= 10) {
+                        priority = 'Prioridade média';
+                        emoji = '📌';
+                    } else {
+                        priority = 'Prioridade normal';
+                        emoji = '📝';
+                    }
+
+                    html += `<li>${emoji} <strong>${item.subject}:</strong> ${item.questions} questões (${percentage}%) - <span style="color: var(--accent-primary);">${priority}</span></li>`;
+                });
+                html += '</ul>';
+
+                // Study time recommendation
+                html += '<p style="margin-top: 15px;"><strong>⏰ Distribuição de Tempo Sugerida:</strong></p><ul>';
+                subjectWeights.slice(0, 3).forEach(item => {
+                    const percentage = ((item.questions / totalQuestions) * 100).toFixed(0);
+                    html += `<li><strong>${item.subject}:</strong> ~${percentage}% do seu tempo de estudo</li>`;
+                });
+                html += '</ul>';
+            }
+
+            html += '</div>';
+
+            // Time-based strategy
+            if (daysUntilExam !== null) {
+                html += '<div style="background: var(--bg-elevated); padding: 15px; border-radius: 8px; margin-bottom: 15px;">';
+                html += '<p><strong>📅 Estratégia baseada no tempo:</strong></p><ul>';
+
+                if (daysUntilExam < 0) {
+                    html += '<li>⚠️ A data da prova já passou ou está incorreta no edital</li>';
+                } else if (daysUntilExam <= 30) {
+                    html += '<li>🚨 <strong>ATENÇÃO: Menos de 30 dias!</strong> Modo INTENSIVO ativado</li>';
+                    html += '<li>🎯 Foque nas matérias de maior peso (top 3)</li>';
+                    html += '<li>📝 Faça SIMULADOS semanais obrigatórios</li>';
+                    html += '<li>⏱️ Estude no mínimo 4-6h por dia</li>';
+                    html += '<li>🔄 Últimos 7 dias: apenas revisão e simulados</li>';
+                } else if (daysUntilExam <= 60) {
+                    html += `<li>⚡ Você tem ${daysUntilExam} dias - Tempo moderado</li>`;
+                    html += '<li>📚 Cubra todas as matérias em ciclos completos</li>';
+                    html += '<li>📊 1 simulado a cada 2 semanas</li>';
+                    html += '<li>🎴 Use flashcards para memorização</li>';
+                    html += '<li>⏰ Estude 3-5h por dia consistentemente</li>';
+                } else if (daysUntilExam <= 120) {
+                    html += `<li>📅 Você tem ${daysUntilExam} dias - Tempo bom para preparação</li>`;
+                    html += '<li>📖 Estudo aprofundado de teoria + questões</li>';
+                    html += '<li>🔄 Faça 2-3 ciclos completos de todas as matérias</li>';
+                    html += '<li>📝 Simulado mensal para acompanhar evolução</li>';
+                    html += '<li>⏱️ 2-4h por dia é suficiente se for consistente</li>';
+                } else {
+                    html += `<li>✅ Você tem ${daysUntilExam} dias - Tempo excelente!</li>`;
+                    html += '<li>📚 Aproveite para estudar com profundidade</li>';
+                    html += '<li>🎯 Desenvolva base sólida em cada matéria</li>';
+                    html += '<li>📊 Acompanhe estatísticas e ajuste estratégia</li>';
+                    html += '<li>⏰ 2-3h por dia com qualidade é ideal</li>';
+                }
+
+                html += '</ul></div>';
+            }
+
+            // Subject-specific tips
+            html += '<div style="background: var(--bg-elevated); padding: 15px; border-radius: 8px;">';
+            html += '<p><strong>📚 Dicas por Disciplina:</strong></p><ul>';
+
+            const subjectTips = {
+                'Direito Constitucional': '🎯 Foque em: Direitos Fundamentais, Organização do Estado, Controle de Constitucionalidade',
+                'Constitucional': '🎯 Foque em: Direitos Fundamentais, Organização do Estado, Controle de Constitucionalidade',
+                'Direito Administrativo': '🏛️ Priorize: Atos Administrativos, Licitações (Lei 14.133/21), Servidores Públicos',
+                'Administrativo': '🏛️ Priorize: Atos Administrativos, Licitações (Lei 14.133/21), Servidores Públicos',
+                'Português': '📖 Essencial: Interpretação de Texto (40%), Gramática (40%), Redação Oficial (20%)',
+                'Língua Portuguesa': '📖 Essencial: Interpretação de Texto (40%), Gramática (40%), Redação Oficial (20%)',
+                'Raciocínio Lógico': '🧮 Matéria de TREINO! Faça 20+ questões por dia, todo dia',
+                'Lógica': '🧮 Matéria de TREINO! Faça 20+ questões por dia, todo dia',
+                'Matemática': '🔢 Pratique diariamente! Foque em: Porcentagem, Regra de 3, Equações',
+                'Informática': '💻 Estude: Windows/Linux, Office (Excel é campeão), Redes e Segurança',
+                'Direito Penal': '⚖️ Parte Geral é 60% das questões! Domine antes da Parte Especial',
+                'Direito Civil': '📜 Base: Parte Geral, Obrigações, Contratos (são as mais cobradas)',
+                'Contabilidade': '📊 Faça exercícios práticos! Teoria sozinha não basta',
+            };
+
+            foundSubjects.forEach(subject => {
+                if (subjectTips[subject]) {
+                    html += `<li>${subjectTips[subject]}</li>`;
+                }
+            });
+
+            html += '<li>⏰ <strong>Técnica Pomodoro:</strong> Use a aba Pomodoro para manter foco e produtividade</li>';
+            html += '<li>📊 <strong>Simulados regulares:</strong> Meça seu progresso e identifique pontos fracos</li>';
+            html += '<li>🎴 <strong>Flashcards:</strong> Perfeito para leis, conceitos e jurisprudência</li>';
+            html += '<li>🎧 <strong>Use áudio:</strong> Transforme PDFs em áudio e estude em movimento</li>';
+
+            html += '</ul></div>';
+
+            return html;
+        }
+
+        // Extract detailed topics from syllabus - IMPROVED VERSION
+        function extractTopics(text, subject) {
+            const topics = [];
+
+            // Escape special regex characters in subject name
+            const escapedSubject = subject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // Try multiple patterns to find the subject section
+            let content = '';
+
+            // Pattern 1: Subject followed by colon or newline, until next subject or end
+            const pattern1 = new RegExp(`${escapedSubject}[:\\s]*([\\s\\S]{0,3000})(?=\\n\\s*(?:[A-ZÀ-Ú][A-Za-zÀ-ÿ\\s]{5,}:|$))`, 'i');
+            const match1 = text.match(pattern1);
+
+            if (match1 && match1[1]) {
+                content = match1[1];
+            } else {
+                // Pattern 2: Try to find subject with question count, then content
+                const pattern2 = new RegExp(`${escapedSubject}[^\\n]{0,100}(?:\\d+\\s*questões?)?[:\\s]*([\\s\\S]{0,3000})(?=\\n\\s*[A-ZÀ-Ú][A-Za-zÀ-ÿ\\s]{5,}|$)`, 'i');
+                const match2 = text.match(pattern2);
+                if (match2 && match2[1]) {
+                    content = match2[1];
+                }
+            }
+
+            if (content) {
+                console.log(`Conteúdo encontrado para ${subject}:`, content.substring(0, 200));
+
+                // Extract numbered items (1., 2., 1.1, 1.1.1, etc.)
+                const numberedPatterns = [
+                    /(?:^|\n)\s*(\d+)\.\s*([^\n]+)/gi,  // 1. Topic
+                    /(?:^|\n)\s*(\d+\.\d+)\.\s*([^\n]+)/gi,  // 1.1. Topic
+                    /(?:^|\n)\s*(\d+\.\d+\.\d+)\.\s*([^\n]+)/gi,  // 1.1.1. Topic
+                ];
+
+                numberedPatterns.forEach(pattern => {
+                    const matches = content.matchAll(pattern);
+                    for (const m of matches) {
+                        const topic = m[2].trim();
+                        // Filter out if it's just a subject name or too short/long
+                        if (topic.length > 3 && topic.length < 300 && !topic.match(/^\d+\s*questões?/i)) {
+                            const cleanTopic = topic.replace(/[:\-;,]+$/, '').trim();
+                            if (!topics.includes(cleanTopic)) {
+                                topics.push(cleanTopic);
+                            }
+                        }
+                    }
+                });
+
+                // Extract items with letters (a), b), c), etc.)
+                const letterRegex = /(?:^|\n)\s*([a-z])\)\s*([^\n]+)/gi;
+                const letterMatches = content.matchAll(letterRegex);
+
+                for (const m of letterMatches) {
+                    const topic = m[2].trim();
+                    if (topic.length > 3 && topic.length < 300) {
+                        const cleanTopic = topic.replace(/[:\-;,]+$/, '').trim();
+                        if (!topics.includes(cleanTopic)) {
+                            topics.push(cleanTopic);
+                        }
+                    }
+                }
+
+                // Extract bullet points (-, •, *, etc.)
+                const bulletRegex = /(?:^|\n)\s*[-•\*]\s*([^\n]+)/gi;
+                const bulletMatches = content.matchAll(bulletRegex);
+
+                for (const m of bulletMatches) {
+                    const topic = m[1].trim();
+                    if (topic.length > 3 && topic.length < 300) {
+                        const cleanTopic = topic.replace(/[:\-;,]+$/, '').trim();
+                        if (!topics.includes(cleanTopic)) {
+                            topics.push(cleanTopic);
+                        }
+                    }
+                }
+
+                // If still no topics found, try to extract any line that looks like a topic
+                if (topics.length === 0) {
+                    const lines = content.split('\n');
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        // Skip empty lines, very short lines, and lines with numbers only
+                        if (trimmed.length > 10 && trimmed.length < 300 &&
+                            !trimmed.match(/^\d+\s*questões?/i) &&
+                            !trimmed.match(/^questões?/i) &&
+                            !trimmed.match(/^\d+$/)) {
+                            topics.push(trimmed);
+                        }
+                    }
+                }
+            } else {
+                console.log(`Nenhum conteúdo encontrado para ${subject}`);
+            }
+
+            console.log(`Tópicos extraídos para ${subject}:`, topics.length);
+            return topics.slice(0, 30); // Limit to 30 topics per subject
+        }
+
+        // Generate verticalized syllabus
+        function generateVerticalizedSyllabus(text, foundSubjects) {
+            let html = '<div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-top: 20px;">';
+            html += '<h3 style="color: var(--accent-primary); margin-bottom: 20px;">📋 Edital Verticalizado</h3>';
+            html += '<p style="color: var(--text-secondary); margin-bottom: 20px;">Conteúdo reorganizado por disciplina para facilitar seus estudos</p>';
+
+            foundSubjects.forEach((subject, idx) => {
+                const topics = extractTopics(text, subject);
+
+                html += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--accent-primary);">`;
+                html += `<h4 style="color: var(--accent-primary); margin-bottom: 10px;">${idx + 1}. ${subject}</h4>`;
+
+                if (topics.length > 0) {
+                    html += '<ul style="margin-left: 20px; line-height: 1.8;">';
+                    topics.forEach(topic => {
+                        html += `<li>${topic}</li>`;
+                    });
+                    html += '</ul>';
+                } else {
+                    html += '<p style="color: var(--text-secondary); font-style: italic;">Tópicos não especificados no edital. Consulte bibliografia recomendada.</p>';
+                }
+
+                html += '</div>';
+            });
+
+            html += '<div style="margin-top: 20px; padding: 15px; background: var(--bg-elevated); border-radius: 8px;">';
+            html += '<p style="margin: 0;"><strong>💡 Dica:</strong> Salve este edital verticalizado e use como checklist durante seus estudos. Marque cada tópico conforme for dominando!</p>';
+            html += '</div>';
+
+            html += '</div>';
+            return html;
+        }
+
+        // Generate cyclic weekly study schedule with specific topics
+        function generateCyclicSchedule(text, foundSubjects, daysUntilExam) {
+            let html = '<div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-top: 20px;">';
+            html += '<h3 style="color: var(--accent-primary); margin-bottom: 20px;">🔄 Cronograma Cíclico Semanal</h3>';
+            html += '<p style="color: var(--text-secondary); margin-bottom: 20px;">Estude todas as matérias e tópicos em ciclos semanais completos</p>';
+
+            // Extract topics for each subject
+            const subjectsWithTopics = [];
+            foundSubjects.forEach(subject => {
+                const topics = extractTopics(text, subject);
+                if (topics.length > 0) {
+                    subjectsWithTopics.push({
+                        subject: subject,
+                        topics: topics
+                    });
+                } else {
+                    subjectsWithTopics.push({
+                        subject: subject,
+                        topics: ['Todos os tópicos do edital']
+                    });
+                }
+            });
+
+            const numSubjects = subjectsWithTopics.length;
+            const numCycles = daysUntilExam ? Math.floor(daysUntilExam / 7) : 4;
+            const cyclesToShow = Math.min(numCycles, 4);
+
+            const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+            // Calculate how many subjects per day (aim for 2-3 subjects per day)
+            const studyDaysPerWeek = 6;
+            const subjectsPerDay = Math.max(2, Math.ceil(numSubjects / studyDaysPerWeek));
+
+            for (let cycle = 1; cycle <= cyclesToShow; cycle++) {
+                html += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">`;
+                html += `<h4 style="color: var(--accent-secondary); margin-bottom: 15px;">📅 Ciclo ${cycle} - Semana ${cycle}</h4>`;
+
+                html += '<table style="width: 100%; border-collapse: collapse;">';
+                html += '<thead><tr style="background: var(--bg-elevated);">';
+                html += '<th style="padding: 10px; text-align: left; border: 1px solid var(--border);">Dia</th>';
+                html += '<th style="padding: 10px; text-align: left; border: 1px solid var(--border);">Disciplinas e Tópicos</th>';
+                html += '<th style="padding: 10px; text-align: left; border: 1px solid var(--border);">Método</th>';
+                html += '</tr></thead><tbody>';
+
+                days.forEach((day, dayIdx) => {
+                    html += '<tr style="border: 1px solid var(--border); vertical-align: top;">';
+                    html += `<td style="padding: 10px; font-weight: 600;">${day}</td>`;
+
+                    if (dayIdx === 6) { // Sunday
+                        html += '<td style="padding: 10px;"><strong style="color: var(--accent-warm);">REVISÃO GERAL</strong><ul style="margin: 5px 0 0 20px; line-height: 1.6;">';
+                        subjectsWithTopics.forEach(item => {
+                            html += `<li><strong>${item.subject}:</strong> Revisar anotações e resolver questões</li>`;
+                        });
+                        html += '</ul></td>';
+                        html += '<td style="padding: 10px;">📊 <strong>Simulado completo</strong><br>Meça seu desempenho</td>';
+                    } else {
+                        // Distribute subjects across the week
+                        const startIdx = (dayIdx * subjectsPerDay) % numSubjects;
+                        const todaySubjectsData = [];
+
+                        for (let i = 0; i < subjectsPerDay && todaySubjectsData.length < 3; i++) {
+                            const idx = (startIdx + i + (cycle - 1) * subjectsPerDay) % numSubjects;
+                            todaySubjectsData.push(subjectsWithTopics[idx]);
+                        }
+
+                        if (todaySubjectsData.length > 0) {
+                            html += '<td style="padding: 10px;"><ul style="margin: 0; padding: 0; list-style: none; line-height: 1.8;">';
+
+                            todaySubjectsData.forEach(item => {
+                                const topicsToShow = item.topics.slice(0, 3); // Max 3 topics per subject per day
+                                const startTopicIdx = ((cycle - 1) * 3) % item.topics.length;
+                                const rotatedTopics = [
+                                    item.topics[startTopicIdx % item.topics.length],
+                                    item.topics[(startTopicIdx + 1) % item.topics.length],
+                                    item.topics[(startTopicIdx + 2) % item.topics.length]
+                                ].filter(t => t !== undefined);
+
+                                html += `<li style="margin-bottom: 10px;"><strong style="color: var(--accent-primary);">${item.subject}:</strong><ul style="margin: 5px 0 0 20px; font-size: 14px; color: var(--text-secondary);">`;
+
+                                rotatedTopics.forEach(topic => {
+                                    html += `<li>${topic}</li>`;
+                                });
+
+                                html += '</ul></li>';
+                            });
+
+                            html += '</ul></td>';
+
+                            // Activity based on cycle
+                            if (cycle === 1) {
+                                html += '<td style="padding: 10px;">📖 <strong>Teoria</strong><br>Leitura de lei seca e doutrina</td>';
+                            } else if (cycle === 2) {
+                                html += '<td style="padding: 10px;">📝 <strong>Teoria + Questões</strong><br>Questões comentadas</td>';
+                            } else if (cycle === 3) {
+                                html += '<td style="padding: 10px;">🎯 <strong>Questões</strong><br>Foco em treino e erros</td>';
+                            } else {
+                                html += '<td style="padding: 10px;">🔄 <strong>Revisão</strong><br>Mapas mentais + questões</td>';
+                            }
+                        } else {
+                            html += '<td style="padding: 10px; color: var(--text-secondary);">Descanso</td>';
+                            html += '<td style="padding: 10px;">💤 Dia livre</td>';
+                        }
+                    }
+
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+            }
+
+            html += '<div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 15px; border-radius: 8px; color: white;">';
+            html += '<h4 style="margin-bottom: 10px;">✨ Como usar o Cronograma Cíclico:</h4>';
+            html += '<ul style="margin-left: 20px; line-height: 1.8;">';
+            html += '<li><strong>Ciclo 1:</strong> Foco em TEORIA e leitura de lei seca</li>';
+            html += '<li><strong>Ciclo 2:</strong> TEORIA + questões comentadas (entender o raciocínio)</li>';
+            html += '<li><strong>Ciclo 3:</strong> QUESTÕES em volume + revisar erros</li>';
+            html += '<li><strong>Ciclo 4+:</strong> REVISÃO intensiva + questões de fixação</li>';
+            html += '<li><strong>Domingos:</strong> SEMPRE fazer simulado completo para medir evolução</li>';
+            html += '</ul>';
+            html += '</div>';
+
+            html += '</div>';
+            return html;
+        }
+
+        // Generate subject summary
+        function generateSubjectSummary(text, foundSubjects) {
+            let html = '<div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-top: 20px;">';
+            html += '<h3 style="color: var(--accent-primary); margin-bottom: 20px;">📝 Resumo dos Assuntos</h3>';
+
+            const summaryTips = {
+                'Direito Constitucional': {
+                    emoji: '🎯',
+                    principais: ['Direitos Fundamentais (arts. 5º ao 17)', 'Organização do Estado (arts. 18 a 43)', 'Administração Pública (arts. 37 a 43)', 'Controle de Constitucionalidade', 'Poder Legislativo, Executivo e Judiciário'],
+                    estrategia: 'Leia a CF/88 diariamente! Foque nos artigos mais cobrados (5º, 37, 84, 102, 103)'
+                },
+                'Constitucional': {
+                    emoji: '🎯',
+                    principais: ['Direitos Fundamentais', 'Organização do Estado', 'Administração Pública', 'Controle de Constitucionalidade', 'Poderes da República'],
+                    estrategia: 'Leia a CF/88 diariamente! Foque nos artigos mais cobrados'
+                },
+                'Direito Administrativo': {
+                    emoji: '🏛️',
+                    principais: ['Princípios da Administração Pública', 'Atos Administrativos', 'Licitações (Lei 14.133/21)', 'Contratos Administrativos', 'Servidores Públicos (Lei 8.112/90)', 'Responsabilidade Civil do Estado', 'Improbidade Administrativa (Lei 8.429/92)'],
+                    estrategia: 'Domine a Lei 14.133/21 (nova lei de licitações) e Lei 8.112/90. São as mais cobradas!'
+                },
+                'Administrativo': {
+                    emoji: '🏛️',
+                    principais: ['Princípios', 'Atos Administrativos', 'Licitações', 'Contratos', 'Servidores Públicos', 'Responsabilidade Civil'],
+                    estrategia: 'Domine Lei 14.133/21 e Lei 8.112/90'
+                },
+                'Português': {
+                    emoji: '📖',
+                    principais: ['Interpretação e Compreensão de Textos', 'Ortografia e Acentuação', 'Classes Gramaticais', 'Sintaxe (Concordância, Regência, Crase)', 'Pontuação', 'Redação Oficial'],
+                    estrategia: 'Leia MUITO! Jornais, editoriais, textos oficiais. Faça questões diariamente.'
+                },
+                'Língua Portuguesa': {
+                    emoji: '📖',
+                    principais: ['Interpretação de Textos', 'Ortografia', 'Classes Gramaticais', 'Sintaxe', 'Pontuação', 'Redação Oficial'],
+                    estrategia: 'Leia muito e faça questões diariamente'
+                },
+                'Raciocínio Lógico': {
+                    emoji: '🧮',
+                    principais: ['Lógica Proposicional (V ou F)', 'Equivalências Lógicas', 'Diagramas Lógicos (Venn)', 'Lógica de Argumentação', 'Sequências e Padrões', 'Análise Combinatória', 'Probabilidade'],
+                    estrategia: 'PRATIQUE! Faça no mínimo 20 questões por dia. É matéria de treino, não de teoria.'
+                },
+                'Lógica': {
+                    emoji: '🧮',
+                    principais: ['Lógica Proposicional', 'Equivalências', 'Diagramas', 'Argumentação', 'Sequências'],
+                    estrategia: 'Faça 20+ questões por dia. Matéria de treino!'
+                },
+                'Informática': {
+                    emoji: '💻',
+                    principais: ['Windows 10/11', 'Linux (Ubuntu)', 'Microsoft Office (Word, Excel, PowerPoint)', 'LibreOffice', 'Navegadores e Internet', 'Segurança da Informação', 'Redes de Computadores', 'Conceitos de Cloud'],
+                    estrategia: 'Excel é CAMPEÃO de questões! Domine fórmulas, funções e formatação.'
+                },
+                'Matemática': {
+                    emoji: '🔢',
+                    principais: ['Porcentagem', 'Regra de 3 Simples e Composta', 'Equações do 1º e 2º grau', 'Juros Simples e Compostos', 'Razão e Proporção', 'Geometria Básica'],
+                    estrategia: 'Faça exercícios todos os dias! Matemática é prática constante.'
+                }
+            };
+
+            foundSubjects.forEach((subject, idx) => {
+                const summary = summaryTips[subject];
+
+                html += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 15px;">`;
+
+                if (summary) {
+                    html += `<h4 style="color: var(--accent-primary); margin-bottom: 10px;">${summary.emoji} ${subject}</h4>`;
+                    html += '<p style="margin-bottom: 10px;"><strong>Principais Tópicos:</strong></p>';
+                    html += '<ul style="margin-left: 20px; margin-bottom: 15px; line-height: 1.8;">';
+                    summary.principais.forEach(topic => {
+                        html += `<li>${topic}</li>`;
+                    });
+                    html += '</ul>';
+                    html += `<div style="background: var(--bg-elevated); padding: 10px; border-radius: 6px; border-left: 3px solid var(--accent-warm);">`;
+                    html += `<p style="margin: 0;"><strong>💡 Estratégia:</strong> ${summary.estrategia}</p>`;
+                    html += '</div>';
+                } else {
+                    html += `<h4 style="color: var(--accent-primary); margin-bottom: 10px;">📚 ${subject}</h4>`;
+                    const topics = extractTopics(text, subject);
+                    if (topics.length > 0) {
+                        html += '<ul style="margin-left: 20px; line-height: 1.8;">';
+                        topics.slice(0, 10).forEach(topic => {
+                            html += `<li>${topic}</li>`;
+                        });
+                        html += '</ul>';
+                    } else {
+                        html += '<p style="color: var(--text-secondary);">Consulte o edital para tópicos específicos</p>';
+                    }
+                }
+
+                html += '</div>';
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        // PDF Upload and Processing
+        let currentAnalysisUtterance = null;
+        let isReadingAnalysis = false;
+
+        const pdfDropArea = document.getElementById('pdfDropArea');
+        const pdfFileInput = document.getElementById('pdfFileInput');
+
+        // Click to select file
+        pdfDropArea.addEventListener('click', () => {
+            pdfFileInput.click();
+        });
+
+        // Drag and drop handlers
+        pdfDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfDropArea.style.borderColor = 'var(--accent-primary)';
+            pdfDropArea.style.background = 'var(--bg-secondary)';
+        });
+
+        pdfDropArea.addEventListener('dragleave', () => {
+            pdfDropArea.style.borderColor = 'var(--border)';
+            pdfDropArea.style.background = 'var(--bg-tertiary)';
+        });
+
+        pdfDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfDropArea.style.borderColor = 'var(--border)';
+            pdfDropArea.style.background = 'var(--bg-tertiary)';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handlePDFFile(files[0]);
+            }
+        });
+
+        pdfFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handlePDFFile(e.target.files[0]);
+            }
+        });
+
+        async function handlePDFFile(file) {
+            if (!file.type.includes('pdf')) {
+                showNotification('⚠️ Por favor, selecione um arquivo PDF');
+                return;
+            }
+
+            showNotification('📄 Processando PDF...');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+
+                if (typeof pdfjsLib === 'undefined') {
+                    // Fallback if PDF.js not loaded
+                    showNotification('⚠️ Biblioteca PDF não disponível. Por favor, cole o texto manualmente.');
+                    return;
+                }
+
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = '';
+
+                // Extract text from all pages
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+
+                // Put extracted text in textarea
+                document.getElementById('editalInput').value = fullText;
+                showNotification(`✅ PDF processado! ${pdf.numPages} página(s) extraída(s).`);
+
+                // Auto-analyze
+                setTimeout(() => {
+                    document.getElementById('analyzeEdital').click();
+                }, 500);
+
+            } catch (error) {
+                console.error('Erro ao processar PDF:', error);
+                showNotification('❌ Erro ao processar PDF. Tente colar o texto manualmente.');
+            }
+        }
+
+        // Function to read analysis aloud
+        window.ouvirAnalise = function() {
+            const content = document.getElementById('analysisContent');
+            if (!content) return;
+
+            const iconEl = document.getElementById('ouvirIcon');
+            const textEl = document.getElementById('ouvirText');
+
+            // If already reading, stop
+            if (isReadingAnalysis && speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+                isReadingAnalysis = false;
+                iconEl.textContent = '🎧';
+                textEl.textContent = 'Ouvir Análise';
+                return;
+            }
+
+            // Get clean text from HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content.innerHTML;
+            const textToRead = tempDiv.innerText || tempDiv.textContent;
+
+            if (!textToRead.trim()) {
+                showNotification('⚠️ Nenhum conteúdo para ler');
+                return;
+            }
+
+            // Get selected speed
+            const speedInput = document.getElementById('analysisSpeed');
+            const speed = speedInput ? parseFloat(speedInput.value) : 1.0;
+
+            currentAnalysisUtterance = new SpeechSynthesisUtterance(textToRead);
+            currentAnalysisUtterance.lang = 'pt-BR';
+            currentAnalysisUtterance.rate = speed;
+
+            currentAnalysisUtterance.onstart = () => {
+                isReadingAnalysis = true;
+                iconEl.textContent = '⏸️';
+                textEl.textContent = 'Parar Leitura';
+            };
+
+            currentAnalysisUtterance.onend = () => {
+                isReadingAnalysis = false;
+                iconEl.textContent = '🎧';
+                textEl.textContent = 'Ouvir Análise';
+                showNotification('✅ Leitura concluída!');
+            };
+
+            currentAnalysisUtterance.onerror = () => {
+                isReadingAnalysis = false;
+                iconEl.textContent = '🎧';
+                textEl.textContent = 'Ouvir Análise';
+            };
+
+            speechSynthesis.speak(currentAnalysisUtterance);
+        };
+
+        async function generateCronograma() {
+            const concurso = document.getElementById('concursoNome').value.trim();
+            const dataProva = document.getElementById('dataProva').value;
+            const horasDia = document.getElementById('horasDia').value;
+            const materias = document.getElementById('materiasEdital').value.trim();
+            const nivel = document.getElementById('nivelConhecimento').value;
+
+            if (!concurso || !dataProva || !materias) {
+                showNotification('⚠️ Preencha todos os campos obrigatórios');
+                return;
+            }
+
+            const outputEl = document.getElementById('cronogramaOutput');
+            outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Gerando cronograma personalizado...</div>`;
+
+            const hoje = new Date().toLocaleDateString('pt-BR');
+            const diasRestantes = Math.ceil((new Date(dataProva) - new Date()) / (1000 * 60 * 60 * 24));
+
+            // Try Poe API first
+            if (window.Poe) {
+                const prompt = `Você é um especialista em preparação para concursos públicos. Crie um cronograma de estudos DETALHADO e PERSONALIZADO com as seguintes informações:
+
+📋 CONCURSO: ${concurso}
+📅 DATA DA PROVA: ${dataProva} (${diasRestantes} dias restantes a partir de ${hoje})
+⏰ HORAS DISPONÍVEIS POR DIA: ${horasDia} horas
+📚 NÍVEL: ${nivel}
+
+MATÉRIAS DO EDITAL:
+${materias}
+
+Por favor, crie um cronograma que inclua:
+1. Divisão semanal de estudos
+2. Distribuição equilibrada das matérias
+3. Períodos de revisão
+4. Simulados programados
+5. Dicas específicas para cada fase de preparação
+6. Estratégias de acordo com o nível de conhecimento (${nivel})
+
+Organize o cronograma de forma clara, usando formatação markdown para melhor visualização.`;
+
+                try {
+                    await window.Poe.sendUserMessage(`@Claude-Sonnet-4.5 ${prompt}`, {
+                        handler: "cronograma-handler",
+                        stream: true,
+                        openChat: false
+                    });
+                    return;
+                } catch (err) {
+                    console.log('Poe API não disponível, usando gerador offline');
+                }
+            }
+
+            // Fallback: Offline intelligent chronogram generator
+            setTimeout(() => {
+                const cronograma = generateCronogramaOffline(concurso, dataProva, horasDia, materias, nivel, diasRestantes);
+                outputEl.innerHTML = `<div class="ai-response">${cronograma}</div>`;
+
+                // Save the cronograma
+                const savedCronogramas = Storage.get('savedCronogramas', []);
+                savedCronogramas.push({
+                    id: Date.now(),
+                    date: new Date().toLocaleString('pt-BR'),
+                    concurso: concurso,
+                    response: cronograma
+                });
+                Storage.set('savedCronogramas', savedCronogramas);
+                renderSavedCronogramas();
+            }, 1000);
+        }
+
+        function generateCronogramaOffline(concurso, dataProva, horasDia, materias, nivel, diasRestantes) {
+            const materiasArray = materias.split('\n').filter(m => m.trim());
+            const numMaterias = materiasArray.length;
+
+            let html = `<h3>📅 Cronograma Personalizado - ${concurso}</h3>`;
+
+            // Summary
+            html += `<div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 20px; border-radius: 8px; margin: 20px 0; color: white;">`;
+            html += `<h4 style="margin-bottom: 10px;">📊 Resumo do Plano</h4>`;
+            html += `<p><strong>🎯 Concurso:</strong> ${concurso}</p>`;
+            html += `<p><strong>📅 Data da Prova:</strong> ${new Date(dataProva).toLocaleDateString('pt-BR')}</p>`;
+            html += `<p><strong>⏰ Dias restantes:</strong> ${diasRestantes} dias</p>`;
+            html += `<p><strong>⏱️ Horas por dia:</strong> ${horasDia}h</p>`;
+            html += `<p><strong>📚 Total de matérias:</strong> ${numMaterias}</p>`;
+            html += `<p><strong>💪 Nível:</strong> ${nivel.charAt(0).toUpperCase() + nivel.slice(1)}</p>`;
+            html += `</div>`;
+
+            // Calculate distribution
+            const totalHoras = diasRestantes * horasDia;
+            const semanas = Math.floor(diasRestantes / 7);
+
+            html += `<h4>🎯 Estratégia de Estudo</h4>`;
+            html += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">`;
+
+            if (diasRestantes < 30) {
+                html += `<p><strong>⚡ MODO INTENSIVO:</strong> Menos de 30 dias para a prova!</p>`;
+                html += `<ul>`;
+                html += `<li>Foque nas matérias de maior peso</li>`;
+                html += `<li>Faça no mínimo 1 simulado por semana</li>`;
+                html += `<li>Revise diariamente o que estudou</li>`;
+                html += `<li>Últimos 7 dias: apenas revisão e simulados</li>`;
+                html += `</ul>`;
+            } else if (diasRestantes < 90) {
+                html += `<p><strong>🎯 MODO FOCADO:</strong> Tempo moderado para preparação</p>`;
+                html += `<ul>`;
+                html += `<li>Ciclo completo de todas as matérias</li>`;
+                html += `<li>1 simulado a cada 2 semanas</li>`;
+                html += `<li>Últimos 30 dias: foco em revisão</li>`;
+                html += `<li>Use flashcards para memorização</li>`;
+                html += `</ul>`;
+            } else {
+                html += `<p><strong>📚 MODO COMPLETO:</strong> Tempo ideal para preparação profunda</p>`;
+                html += `<ul>`;
+                html += `<li>Estudo aprofundado de teoria</li>`;
+                html += `<li>Múltiplos ciclos de revisão</li>`;
+                html += `<li>Simulados mensais</li>`;
+                html += `<li>Tempo para correção de deficiências</li>`;
+                html += `</ul>`;
+            }
+            html += `</div>`;
+
+            // Weekly distribution WITH TOPICS
+            html += `<h4>📆 Distribuição Semanal com Assuntos Específicos (${semanas} semanas)</h4>`;
+            html += `<p style="color: var(--text-secondary); margin-bottom: 15px;">Cada dia com tópicos específicos do edital para garantir cobertura completa</p>`;
+
+            const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+            // Extract topics for each subject from the "materias" input
+            const materiasComTopicos = [];
+            materiasArray.forEach(materiaLine => {
+                // Try to separate subject name from topics
+                // Format can be: "Português: topic1, topic2" or just "Português"
+                const parts = materiaLine.split(':');
+                const nomeMateria = parts[0].trim();
+                const topicos = parts[1] ? parts[1].split(',').map(t => t.trim()).filter(t => t) : [];
+
+                materiasComTopicos.push({
+                    nome: nomeMateria,
+                    topicos: topicos.length > 0 ? topicos : ['Todos os tópicos do edital']
+                });
+            });
+
+            html += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 20px;">`;
+
+            const topicosPorSemana = Math.ceil(materiasComTopicos.reduce((sum, m) => sum + m.topicos.length, 0) / semanas);
+
+            for (let sem = 1; sem <= Math.min(4, semanas); sem++) {
+                html += `<h5>📌 Semana ${sem}</h5>`;
+                html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">`;
+                html += `<thead><tr style="background: var(--bg-elevated);">`;
+                html += `<th style="padding: 10px; text-align: left;">Dia</th>`;
+                html += `<th style="padding: 10px; text-align: left;">Disciplinas e Assuntos</th>`;
+                html += `<th style="padding: 10px; text-align: center;">Horas</th>`;
+                html += `</tr></thead><tbody>`;
+
+                diasSemana.forEach((dia, idx) => {
+                    html += `<tr style="border-bottom: 1px solid var(--border); vertical-align: top;">`;
+                    html += `<td style="padding: 10px;"><strong>${dia}</strong></td>`;
+
+                    if (idx === 6) { // Domingo
+                        html += `<td style="padding: 10px;"><strong style="color: var(--accent-warm);">📊 REVISÃO GERAL + SIMULADO</strong><br>`;
+                        html += `<ul style="margin: 5px 0 0 20px; font-size: 14px; color: var(--text-secondary);">`;
+                        materiasComTopicos.forEach(materia => {
+                            html += `<li>${materia.nome}: Revisar anotações e resolver questões</li>`;
+                        });
+                        html += `</ul></td>`;
+                        html += `<td style="padding: 10px; text-align: center;">${horasDia}h</td>`;
+                    } else {
+                        // Distribute subjects across the week
+                        const numMateriasHoje = (idx === 5) ? 2 : 2; // 2 subjects per day
+                        const startIdx = (idx + (sem - 1) * 6) % materiasComTopicos.length;
+
+                        html += `<td style="padding: 10px;">`;
+                        html += `<ul style="margin: 0; padding: 0; list-style: none; line-height: 2;">`;
+
+                        for (let i = 0; i < numMateriasHoje; i++) {
+                            const materiaIdx = (startIdx + i) % materiasComTopicos.length;
+                            const materia = materiasComTopicos[materiaIdx];
+
+                            // Calculate which topics to show this week for this subject
+                            const topicosParaHoje = [];
+                            const topicosPerCycle = Math.max(1, Math.floor(materia.topicos.length / Math.min(4, semanas)));
+                            const startTopicIdx = ((sem - 1) * topicosPerCycle) % materia.topicos.length;
+
+                            for (let t = 0; t < Math.min(3, topicosPerCycle); t++) {
+                                const topicIdx = (startTopicIdx + t) % materia.topicos.length;
+                                if (materia.topicos[topicIdx]) {
+                                    topicosParaHoje.push(materia.topicos[topicIdx]);
+                                }
+                            }
+
+                            html += `<li style="margin-bottom: 12px;">`;
+                            html += `<strong style="color: var(--accent-primary);">${materia.nome}:</strong>`;
+                            if (topicosParaHoje.length > 0) {
+                                html += `<ul style="margin: 3px 0 0 20px; font-size: 14px; color: var(--text-secondary);">`;
+                                topicosParaHoje.forEach(topico => {
+                                    html += `<li>${topico}</li>`;
+                                });
+                                html += `</ul>`;
+                            }
+                            html += `</li>`;
+                        }
+
+                        html += `</ul></td>`;
+                        html += `<td style="padding: 10px; text-align: center;">${horasDia}h</td>`;
+                    }
+
+                    html += `</tr>`;
+                });
+
+                html += `</tbody></table>`;
+            }
+
+            html += `<div style="background: var(--bg-elevated); padding: 15px; border-radius: 8px; margin-top: 15px;">`;
+            html += `<p style="margin: 0;"><strong>💡 Dica:</strong> Este cronograma distribui os assuntos do edital ao longo das semanas. `;
+            html += `Repita os ciclos até a prova, ajustando conforme sua evolução. Use a aba <strong>Estatísticas</strong> para acompanhar seu progresso!</p>`;
+            html += `</div>`;
+
+            html += `</div>`;
+
+            // Tips by level
+            html += `<h4>💡 Dicas Específicas para Nível ${nivel.charAt(0).toUpperCase() + nivel.slice(1)}</h4>`;
+            html += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px;">`;
+            html += `<ul>`;
+
+            if (nivel === 'iniciante') {
+                html += `<li>📖 Comece pela teoria antes de fazer questões</li>`;
+                html += `<li>🎧 Use o Leitor de Texto para reforçar conceitos</li>`;
+                html += `<li>🎴 Crie flashcards dos conceitos básicos</li>`;
+                html += `<li>⏰ Use Pomodoro de 25min para manter o foco</li>`;
+            } else if (nivel === 'intermediario') {
+                html += `<li>📝 Equilibre 50% teoria e 50% questões</li>`;
+                html += `<li>📊 Faça simulados semanalmente</li>`;
+                html += `<li>🔍 Identifique suas matérias fracas e reforce</li>`;
+                html += `<li>⚡ Aumente gradualmente para Pomodoro de 50min</li>`;
+            } else {
+                html += `<li>🎯 Foco em questões e simulados (70%)</li>`;
+                html += `<li>📈 Análise estatística dos seus erros</li>`;
+                html += `<li>🔄 Revisão de jurisprudência recente</li>`;
+                html += `<li>⏱️ Treino de tempo: responda questões cronometrando</li>`;
+            }
+
+            html += `</ul>`;
+            html += `</div>`;
+
+            // Final tips
+            html += `<div style="margin-top: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--success);">`;
+            html += `<h4 style="color: var(--success);">✅ Lembre-se:</h4>`;
+            html += `<ul>`;
+            html += `<li>🔄 <strong>Consistência > Intensidade:</strong> Melhor estudar ${horasDia}h todo dia do que 20h em um único dia</li>`;
+            html += `<li>💤 <strong>Descanso é essencial:</strong> Durma bem para consolidar o aprendizado</li>`;
+            html += `<li>🎯 <strong>Qualidade > Quantidade:</strong> Estudo focado vale mais que horas distraídas</li>`;
+            html += `<li>📊 <strong>Acompanhe seu progresso:</strong> Use a aba Estatísticas para monitorar sua evolução</li>`;
+            html += `</ul>`;
+            html += `</div>`;
+
+            return html;
+        }
+
+        function renderSavedEditais() {
+            const listEl = document.getElementById('savedEditalList');
+
+            if (savedEditais.length === 0) {
+                listEl.innerHTML = '<div class="empty-state"><p>Nenhuma análise salva ainda</p></div>';
+                return;
+            }
+
+            listEl.innerHTML = savedEditais.slice().reverse().map((item, idx) => `
+                <div class="saved-item">
+                    <div class="saved-item-header">
+                        <div>
+                            <div class="saved-item-title">Análise #${savedEditais.length - idx}</div>
+                            <div class="saved-item-date">${item.date}</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteEdital(${savedEditais.length - 1 - idx})">🗑️</button>
+                    </div>
+                    <div class="saved-item-content">
+                        <strong>Consulta:</strong> ${item.input}<br><br>
+                        <div class="ai-response">${item.response}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSavedCronogramas() {
+            const savedCronogramas = Storage.get('savedCronogramas', []);
+            const listEl = document.getElementById('savedCronogramaList');
+
+            if (savedCronogramas.length === 0) {
+                listEl.innerHTML = '<div class="empty-state"><p>Nenhum cronograma salvo ainda</p></div>';
+                return;
+            }
+
+            listEl.innerHTML = savedCronogramas.slice().reverse().map((item, idx) => `
+                <div class="saved-item">
+                    <div class="saved-item-header">
+                        <div>
+                            <div class="saved-item-title">${item.concurso}</div>
+                            <div class="saved-item-date">${item.date}</div>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteCronograma(${savedCronogramas.length - 1 - idx})">🗑️</button>
+                    </div>
+                    <div class="saved-item-content">
+                        <div class="ai-response">${item.response}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteEdital(index) {
+            showConfirmDialog('Tem certeza que deseja excluir esta análise?', () => {
+                savedEditais.splice(index, 1);
+                Storage.set('savedEditais', savedEditais);
+                renderSavedEditais();
+                showNotification('🗑️ Análise excluída');
+            });
+        }
+
+        function deleteCronograma(index) {
+            showConfirmDialog('Tem certeza que deseja excluir este cronograma?', () => {
+                const savedCronogramas = Storage.get('savedCronogramas', []);
+                savedCronogramas.splice(index, 1);
+                Storage.set('savedCronogramas', savedCronogramas);
+                renderSavedCronogramas();
+                showNotification('🗑️ Cronograma excluído');
+            });
+        }
+
+        document.getElementById('analyzeEdital').addEventListener('click', analyzeEdital);
+        document.getElementById('generateCronograma').addEventListener('click', generateCronograma);
+
+        renderSavedEditais();
+        renderSavedCronogramas();
+
+        // PWA - Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('❌ Falha ao registrar Service Worker:', error);
+                    });
+            });
+        }
+
+        // PWA - Install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Mostrar notificação para instalar
+            setTimeout(() => {
+                const installMsg = document.createElement('div');
+                installMsg.className = 'result-message result-info';
+                installMsg.innerHTML = `
+                    📲 Instale o VINE CONCURSOS IA na tela inicial do seu celular!
+                    <button class="btn" onclick="installApp()" style="margin-top: 10px;">Instalar Agora</button>
+                `;
+                installMsg.style.position = 'fixed';
+                installMsg.style.bottom = '20px';
+                installMsg.style.left = '20px';
+                installMsg.style.right = '20px';
+                installMsg.style.zIndex = '2000';
+                installMsg.id = 'installPrompt';
+                document.body.appendChild(installMsg);
+            }, 3000);
+        });
+
+        window.installApp = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+
+                const prompt = document.getElementById('installPrompt');
+                if (prompt) prompt.remove();
+            }
+        };
+
+        // Detectar se está rodando como PWA instalado
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('🚀 App rodando como PWA instalado!');
+        }
+
+        // Update system status indicators
+        function updateSystemStatus() {
+            // PWA Status
+            const pwaInstalled = window.matchMedia('(display-mode: standalone)').matches;
+            document.getElementById('pwaStatus').textContent = pwaInstalled ? '✅ Instalado' : '⚠️ Web';
+
+            // Storage Status
+            document.getElementById('storageStatus').textContent = useLocalStorage ? '✅ Ativo' : '⚠️ Memória';
+
+            // Service Worker Status
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(registration => {
+                    document.getElementById('swStatus').textContent = registration ? '✅ Ativo' : '⚠️ Inativo';
+                });
+            } else {
+                document.getElementById('swStatus').textContent = '❌ Não suportado';
+            }
+
+            // Poe API Status
+            document.getElementById('poeStatus').textContent = window.Poe ? '✅ Disponível' : '⚠️ Indisponível';
+        }
+
+        // Update status when tab changes
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            const originalClick = btn.onclick;
+            btn.addEventListener('click', () => {
+                if (btn.dataset.tab === 'ajuda') {
+                    setTimeout(updateSystemStatus, 100);
+                }
+            });
+        });
+
+        // Initial status update
+        updateSystemStatus();
+    </script>
+</body>
+</html>

@@ -640,9 +640,25 @@
                 </div>
 
                 <div class="input-group">
-                    <label>Texto do Edital ou Pergunta</label>
-                    <textarea id="editalInput" placeholder="Cole o edital completo ou parte dele. A análise será feita automaticamente após colar o texto ou arrastar o PDF." oninput="if(this.value.trim().length > 100) { setTimeout(() => document.getElementById('analyzeEdital').click(), 1000); }"></textarea>
+                    <label>Texto do Edital (para análise geral)</label>
+                    <textarea id="editalInput" placeholder="Cole o edital completo. A análise extrairá informações gerais como data da prova, matérias, quantidade de questões, etc." oninput="if(this.value.trim().length > 100) { setTimeout(() => document.getElementById('analyzeEdital').click(), 1000); }"></textarea>
                 </div>
+
+                <div class="input-group" style="margin-top: 20px;">
+                    <label>📋 Conteúdo Programático (cole aqui APENAS o conteúdo das matérias)</label>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                        <strong>Formato:</strong> Uma matéria por linha, seguida de seus tópicos separados por vírgula ou ponto-e-vírgula.<br>
+                        <strong>Exemplo:</strong><br>
+                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; display: block; margin-top: 5px;">
+                        Português: Concordância verbal, Coesão e coerência, Ortografia oficial<br>
+                        Matemática: Juros simples, Juros compostos, Estatística básica<br>
+                        Direito Administrativo: Atos administrativos, Licitações, Contratos
+                        </code>
+                    </p>
+                    <textarea id="conteudoProgramatico" placeholder="Português: Concordância verbal, Coesão e coerência, Ortografia oficial&#10;Matemática: Juros simples, Juros compostos, Estatística básica&#10;Direito Administrativo: Atos administrativos, Licitações, Contratos" style="min-height: 200px;"></textarea>
+                    <button class="btn btn-secondary" id="processarConteudo" style="margin-top: 10px;">✅ Processar Conteúdo Programático</button>
+                </div>
+
                 <button class="btn" id="analyzeEdital" style="display: none;">🤖 Analisar</button>
                 <div id="editalOutput" style="margin-top: 20px;"></div>
             </div>
@@ -2380,76 +2396,68 @@ Por favor, organize sua resposta de forma clara, destacando:
             if (content) {
                 console.log(`📝 Processando ${content.length} caracteres para "${subject}"...`);
 
-                // CLEAN CONTENT: Remove junk lines first
-                const lines = content.split(/[\n\r]+/);
-                const cleanedLines = [];
-
-                for (let line of lines) {
-                    const trimmed = line.trim();
-
-                    // SKIP obvious junk
-                    if (
-                        trimmed.length < 5 ||  // Too short
-                        trimmed.match(/^\d+\s+QUEST[OÕ]ES/i) ||  // "7 QUESTÕES X 1"
-                        trimmed.match(/^QUEST[OÕ]ES?\s*X/i) ||
-                        trimmed.match(/^https?:\/\//i) ||  // URLs
-                        trimmed.match(/^www\./i) ||
-                        trimmed.match(/^P\s*\d+\s*\)/i) ||  // (P 2), (P 3)
-                        trimmed.match(/prova\s+(?:objetiva|discursiva)/i) ||  // Regras de prova
-                        trimmed.match(/candidato\s+(?:deverá|poderá)/i) ||  // Regras para candidatos
-                        trimmed.match(/edital.*anexo/i) ||  // Referências ao edital
-                        trimmed.match(/cronograma.*const/i) ||  // Cronograma
-                        trimmed.match(/peso\s*\d+/i) ||  // "peso 2"
-                        trimmed.match(/duração.*horas/i) ||  // Duração da prova
-                        trimmed.match(/^Objetiva\s+Conhecimentos/i) ||
-                        trimmed.match(/^Discursiva.*Estudo/i)
-                    ) {
-                        continue;  // Skip this line
+                // ESTRATÉGIA 1: Números (1., 1.1., 1.1.1., etc.)
+                const numberedRegex = /(\d+(?:\.\d+)*)\.\s*([^\n]+)/gi;
+                let matches = [...content.matchAll(numberedRegex)];
+                matches.forEach(m => {
+                    const topic = m[2].trim();
+                    if (topic.length > 3 && topic.length < 400) {
+                        const clean = topic.replace(/[:\-;,]+$/, '').trim();
+                        if (!topics.includes(clean)) topics.push(clean);
                     }
+                });
 
-                    cleanedLines.push(trimmed);
-                }
+                // ESTRATÉGIA 2: Letras (a), b), c), etc.)
+                const letterRegex = /([a-z])\)\s*([^\n]+)/gi;
+                matches = [...content.matchAll(letterRegex)];
+                matches.forEach(m => {
+                    const topic = m[2].trim();
+                    if (topic.length > 3 && topic.length < 400) {
+                        const clean = topic.replace(/[:\-;,]+$/, '').trim();
+                        if (!topics.includes(clean)) topics.push(clean);
+                    }
+                });
 
-                const cleanContent = cleanedLines.join('\n');
-                console.log(`🧹 Após limpeza: ${cleanedLines.length} linhas válidas`);
+                // ESTRATÉGIA 3: Bullets (-, •, *, etc.)
+                const bulletRegex = /[-•\*]\s*([^\n]+)/gi;
+                matches = [...content.matchAll(bulletRegex)];
+                matches.forEach(m => {
+                    const topic = m[1].trim();
+                    if (topic.length > 3 && topic.length < 400) {
+                        const clean = topic.replace(/[:\-;,]+$/, '').trim();
+                        if (!topics.includes(clean)) topics.push(clean);
+                    }
+                });
 
-                // EXTRACTION STRATEGY: Focus on numbered items
-                const numberedRegex = /^(\d+(?:\.\d+)*)\.\s*(.+)/gm;
-                const matches = [...cleanContent.matchAll(numberedRegex)];
-
-                if (matches.length > 0) {
-                    console.log(`✅ Encontrou ${matches.length} itens numerados`);
-                    matches.forEach(m => {
-                        const topic = m[2].trim();
-                        if (topic.length > 10 && topic.length < 500) {
-                            const clean = topic.replace(/[:\-;,]+$/, '').trim();
-                            if (!topics.includes(clean)) {
+                // ESTRATÉGIA 4: TODAS AS LINHAS (muito agressivo!)
+                if (topics.length < 3) {
+                    console.log('⚠️ Poucos tópicos encontrados. Usando extração linha por linha...');
+                    const lines = content.split(/[\n\r]+/);
+                    lines.forEach(line => {
+                        const trimmed = line.trim();
+                        // Aceita quase tudo que não seja obviamente ruim
+                        if (trimmed.length > 8 && trimmed.length < 500 &&
+                            !trimmed.match(/^\d+\s*questões?/i) &&
+                            !trimmed.match(/^pág/i) &&
+                            !trimmed.match(/^\s*$/)) {
+                            // Limpa números iniciais
+                            let clean = trimmed.replace(/^[\d.\-\s)a-z]+/, '').trim();
+                            clean = clean.replace(/[:\-;,]+$/, '').trim();
+                            if (clean.length > 5 && !topics.includes(clean)) {
                                 topics.push(clean);
                             }
                         }
                     });
-                } else {
-                    console.log('⚠️ Nenhum item numerado encontrado. Tentando bullets e letras...');
+                }
 
-                    // Try bullets
-                    const bulletRegex = /^[-•\*]\s*(.+)/gm;
-                    const bulletMatches = [...cleanContent.matchAll(bulletRegex)];
-                    bulletMatches.forEach(m => {
-                        const topic = m[1].trim();
-                        if (topic.length > 10 && topic.length < 500) {
-                            const clean = topic.replace(/[:\-;,]+$/, '').trim();
-                            if (!topics.includes(clean)) topics.push(clean);
-                        }
-                    });
-
-                    // Try letters (a), b), c))
-                    const letterRegex = /^([a-z])\)\s*(.+)/gm;
-                    const letterMatches = [...cleanContent.matchAll(letterRegex)];
-                    letterMatches.forEach(m => {
-                        const topic = m[2].trim();
-                        if (topic.length > 10 && topic.length < 500) {
-                            const clean = topic.replace(/[:\-;,]+$/, '').trim();
-                            if (!topics.includes(clean)) topics.push(clean);
+                // ESTRATÉGIA 5: Split por pontos, vírgulas, ponto-e-vírgula
+                if (topics.length < 3) {
+                    console.log('⚠️ ÚLTIMA tentativa: split por pontuação...');
+                    const parts = content.split(/[.;,]+/);
+                    parts.forEach(part => {
+                        const trimmed = part.trim();
+                        if (trimmed.length > 10 && trimmed.length < 300) {
+                            if (!topics.includes(trimmed)) topics.push(trimmed);
                         }
                     });
                 }
@@ -3275,8 +3283,103 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             });
         }
 
+        // PROCESSAR CONTEÚDO PROGRAMÁTICO (colado pelo usuário)
+        document.getElementById('processarConteudo').addEventListener('click', () => {
+            const conteudoText = document.getElementById('conteudoProgramatico').value.trim();
+
+            if (!conteudoText) {
+                showNotification('⚠️ Cole o conteúdo programático primeiro!');
+                return;
+            }
+
+            // RESET GLOBAL
+            extractedEditalTopics = {};
+
+            // Parse line by line
+            const lines = conteudoText.split('\n');
+            let processedCount = 0;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // Try to split by : or ;
+                let materia, topicosStr;
+
+                if (line.includes(':')) {
+                    const parts = line.split(':');
+                    materia = parts[0].trim();
+                    topicosStr = parts.slice(1).join(':').trim();
+                } else {
+                    // No delimiter - whole line is the subject
+                    materia = line;
+                    topicosStr = '';
+                }
+
+                if (materia) {
+                    // Parse topics (split by comma or semicolon)
+                    let topicos = [];
+                    if (topicosStr) {
+                        topicos = topicosStr.split(/[,;]/).map(t => t.trim()).filter(t => t);
+                    }
+
+                    extractedEditalTopics[materia] = topicos;
+                    processedCount++;
+                    console.log(`✅ ${materia}: ${topicos.length} tópicos`);
+                }
+            });
+
+            if (processedCount > 0) {
+                showNotification(`✅ ${processedCount} matérias processadas! Conteúdo pronto para usar no cronograma, questões e flashcards.`);
+
+                // Show preview
+                let preview = '<div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-top: 20px;">';
+                preview += '<h3 style="color: var(--accent-primary); margin-bottom: 15px;">📋 Conteúdo Programático Processado</h3>';
+
+                Object.keys(extractedEditalTopics).forEach((materia, idx) => {
+                    const topicos = extractedEditalTopics[materia];
+                    preview += `<div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid var(--accent-primary);">`;
+
+                    if (topicos.length > 0) {
+                        preview += `<p style="line-height: 1.8; margin: 0;"><strong style="color: var(--accent-primary); font-size: 16px;">${idx + 1}. ${materia}:</strong> `;
+                        preview += topicos.join(', ');
+                        preview += '.</p>';
+                    } else {
+                        preview += `<p style="line-height: 1.8; margin: 0;"><strong style="color: var(--accent-primary); font-size: 16px;">${idx + 1}. ${materia}</strong> `;
+                        preview += '<span style="color: var(--text-secondary); font-style: italic;">(sem tópicos especificados)</span></p>';
+                    }
+
+                    preview += '</div>';
+                });
+
+                preview += '<div style="margin-top: 20px; padding: 15px; background: var(--bg-elevated); border-radius: 8px;">';
+                preview += '<p style="margin: 0;"><strong>✅ Pronto!</strong> Este conteúdo será usado automaticamente em:</p>';
+                preview += '<ul style="margin: 10px 0 0 20px; line-height: 1.8;">';
+                preview += '<li>📅 Cronograma Cíclico (com tópicos específicos por dia)</li>';
+                preview += '<li>📝 Caderno de Questões</li>';
+                preview += '<li>🎯 Simulados</li>';
+                preview += '<li>🃏 Flashcards</li>';
+                preview += '</ul></div>';
+                preview += '</div>';
+
+                document.getElementById('editalOutput').innerHTML = preview;
+
+                // Save to storage
+                Storage.set('conteudoProgramatico', extractedEditalTopics);
+            } else {
+                showNotification('⚠️ Nenhuma matéria foi encontrada. Verifique o formato!');
+            }
+        });
+
         document.getElementById('analyzeEdital').addEventListener('click', analyzeEdital);
         document.getElementById('generateCronograma').addEventListener('click', generateCronograma);
+
+        // Load saved conteudo programatico on page load
+        const savedConteudo = Storage.get('conteudoProgramatico', null);
+        if (savedConteudo) {
+            extractedEditalTopics = savedConteudo;
+            console.log('✅ Conteúdo programático carregado:', Object.keys(extractedEditalTopics).length, 'matérias');
+        }
 
         renderSavedEditais();
         renderSavedCronogramas();

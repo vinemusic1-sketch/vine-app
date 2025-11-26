@@ -3295,7 +3295,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             // RESET GLOBAL
             extractedEditalTopics = {};
 
-            // STEP 1: Join continuation lines (lines that don't start with UPPERCASE subject name)
+            // STEP 1: Join continuation lines (ONLY lines with SUBJECT NAME: are new subjects)
             const rawLines = conteudoText.split('\n');
             const consolidatedLines = [];
             let currentLine = '';
@@ -3304,8 +3304,8 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 line = line.trim();
                 if (!line) return;
 
-                // Check if line starts with a subject name (ALL CAPS or Title Case followed by :)
-                const looksLikeSubject = /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{3,}:/i.test(line) || /^\d+\.\s+[A-ZÀ-Ú]/.test(line);
+                // ONLY consider it a new subject if it's ALL CAPS (or mostly caps) followed by :
+                const looksLikeSubject = /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}:/.test(line);
 
                 if (looksLikeSubject && currentLine) {
                     // Save previous subject and start new one
@@ -3315,8 +3315,13 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     // First subject
                     currentLine = line;
                 } else {
-                    // Continuation line - append to current
-                    currentLine += ' ' + line;
+                    // Continuation line (even if starts with numbers!) - append to current
+                    if (currentLine) {
+                        currentLine += ' ' + line;
+                    } else {
+                        // If no current line yet, this is the first line but doesn't look like subject
+                        currentLine = line;
+                    }
                 }
             });
 

@@ -3304,9 +3304,12 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 line = line.trim();
                 if (!line) return;
 
-                // ONLY consider it a new subject if it's ALL CAPS followed by : AND doesn't start with number
-                const startsWithNumber = /^\d+\./.test(line);
-                const looksLikeSubject = !startsWithNumber && /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}:/.test(line);
+                // Detect new subject:
+                // 1. ALL CAPS without number: "LÍNGUA PORTUGUESA:"
+                // 2. Number + ALL CAPS: "1. GERENCIAMENTO:" (but NOT "1. Compreensão de textos")
+                const allCapsWithColon = /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}:/.test(line);
+                const numberedAllCapsWithColon = /^\d+\.\s+[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}:/.test(line);
+                const looksLikeSubject = allCapsWithColon || numberedAllCapsWithColon;
 
                 if (looksLikeSubject && currentLine) {
                     // Save previous subject and start new one

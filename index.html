@@ -3304,8 +3304,9 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 line = line.trim();
                 if (!line) return;
 
-                // ONLY consider it a new subject if it's ALL CAPS (or mostly caps) followed by :
-                const looksLikeSubject = /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}:/.test(line);
+                // ONLY consider it a new subject if it's ALL CAPS followed by : AND doesn't start with number
+                const startsWithNumber = /^\d+\./.test(line);
+                const looksLikeSubject = !startsWithNumber && /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{2,}:/.test(line);
 
                 if (looksLikeSubject && currentLine) {
                     // Save previous subject and start new one
@@ -3331,11 +3332,13 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             }
 
             console.log(`📝 ${rawLines.length} linhas originais → ${consolidatedLines.length} matérias consolidadas`);
+            console.log('Linhas consolidadas:', consolidatedLines);
 
             // STEP 2: Parse consolidated lines
             let processedCount = 0;
 
-            consolidatedLines.forEach(line => {
+            consolidatedLines.forEach((line, idx) => {
+                console.log(`\n🔍 Processando linha ${idx + 1}:`, line.substring(0, 100) + '...');
                 line = line.trim();
                 if (!line) return;
 

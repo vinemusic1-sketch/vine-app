@@ -3295,11 +3295,42 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             // RESET GLOBAL
             extractedEditalTopics = {};
 
-            // Parse line by line
-            const lines = conteudoText.split('\n');
+            // STEP 1: Join continuation lines (lines that don't start with UPPERCASE subject name)
+            const rawLines = conteudoText.split('\n');
+            const consolidatedLines = [];
+            let currentLine = '';
+
+            rawLines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+
+                // Check if line starts with a subject name (ALL CAPS or Title Case followed by :)
+                const looksLikeSubject = /^[A-ZÀ-Ú][A-ZÀ-Ú\s]{3,}:/i.test(line) || /^\d+\.\s+[A-ZÀ-Ú]/.test(line);
+
+                if (looksLikeSubject && currentLine) {
+                    // Save previous subject and start new one
+                    consolidatedLines.push(currentLine);
+                    currentLine = line;
+                } else if (looksLikeSubject) {
+                    // First subject
+                    currentLine = line;
+                } else {
+                    // Continuation line - append to current
+                    currentLine += ' ' + line;
+                }
+            });
+
+            // Don't forget the last one
+            if (currentLine) {
+                consolidatedLines.push(currentLine);
+            }
+
+            console.log(`📝 ${rawLines.length} linhas originais → ${consolidatedLines.length} matérias consolidadas`);
+
+            // STEP 2: Parse consolidated lines
             let processedCount = 0;
 
-            lines.forEach(line => {
+            consolidatedLines.forEach(line => {
                 line = line.trim();
                 if (!line) return;
 
@@ -3317,15 +3348,27 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 }
 
                 if (materia) {
-                    // Parse topics (split by comma or semicolon)
+                    // Clean subject name (remove leading numbers like "1. ")
+                    materia = materia.replace(/^\d+\.\s*/, '');
+
+                    // Parse topics (split by period followed by number: "1. topic1. 2. topic2")
                     let topicos = [];
                     if (topicosStr) {
-                        topicos = topicosStr.split(/[,;]/).map(t => t.trim()).filter(t => t);
+                        // Try numbered format first: "1. topic. 2. topic. 3. topic"
+                        const numberedMatches = topicosStr.match(/\d+\.\s*([^.]+?)(?=\s*\d+\.|$)/g);
+                        if (numberedMatches && numberedMatches.length > 2) {
+                            topicos = numberedMatches.map(t => t.replace(/^\d+\.\s*/, '').trim()).filter(t => t);
+                        } else {
+                            // Fallback to comma/semicolon split
+                            topicos = topicosStr.split(/[,;]/).map(t => t.trim()).filter(t => t);
+                        }
                     }
 
-                    extractedEditalTopics[materia] = topicos;
-                    processedCount++;
-                    console.log(`✅ ${materia}: ${topicos.length} tópicos`);
+                    if (topicos.length > 0) {
+                        extractedEditalTopics[materia] = topicos;
+                        processedCount++;
+                        console.log(`✅ ${materia}: ${topicos.length} tópicos`);
+                    }
                 }
             });
 

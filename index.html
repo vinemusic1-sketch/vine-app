@@ -625,6 +625,77 @@
             <div class="card">
                 <h2 style="margin-bottom: 25px;">📊 Visão Geral do Seu Progresso</h2>
 
+                <!-- Informações do Edital -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; color: white; font-size: 20px;">📋 Informações do Edital</h3>
+                        <button id="editEditalInfo" onclick="toggleEditarInfoEdital()" style="padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                            ✏️ Editar
+                        </button>
+                    </div>
+
+                    <!-- Display Mode -->
+                    <div id="editalInfoDisplay" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 5px;">Cargo/Concurso</div>
+                            <div style="color: white; font-weight: 600; font-size: 16px;" id="displayCargo">Não informado</div>
+                        </div>
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 5px;">📅 Data da Prova</div>
+                            <div style="color: white; font-weight: 600; font-size: 16px;" id="displayDataProva">Não informado</div>
+                        </div>
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 5px;">👥 Vagas</div>
+                            <div style="color: white; font-weight: 600; font-size: 16px;" id="displayVagas">Não informado</div>
+                        </div>
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 5px;">💰 Salário Inicial</div>
+                            <div style="color: white; font-weight: 600; font-size: 16px;" id="displaySalario">Não informado</div>
+                        </div>
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 5px;">🏢 Órgão</div>
+                            <div style="color: white; font-weight: 600; font-size: 16px;" id="displayOrgao">Não informado</div>
+                        </div>
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 5px;">🎓 Escolaridade</div>
+                            <div style="color: white; font-weight: 600; font-size: 16px;" id="displayEscolaridade">Não informado</div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode (Hidden by default) -->
+                    <div id="editalInfoEdit" style="display: none;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="color: rgba(255,255,255,0.9); font-size: 13px; display: block; margin-bottom: 5px;">Cargo/Concurso</label>
+                                <input type="text" id="inputCargo" placeholder="Ex: Analista Judiciário - TRT" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="color: rgba(255,255,255,0.9); font-size: 13px; display: block; margin-bottom: 5px;">📅 Data da Prova</label>
+                                <input type="date" id="inputDataProva" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="color: rgba(255,255,255,0.9); font-size: 13px; display: block; margin-bottom: 5px;">👥 Vagas</label>
+                                <input type="text" id="inputVagas" placeholder="Ex: 50" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="color: rgba(255,255,255,0.9); font-size: 13px; display: block; margin-bottom: 5px;">💰 Salário Inicial</label>
+                                <input type="text" id="inputSalario" placeholder="Ex: R$ 8.500,00" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="color: rgba(255,255,255,0.9); font-size: 13px; display: block; margin-bottom: 5px;">🏢 Órgão</label>
+                                <input type="text" id="inputOrgao" placeholder="Ex: Tribunal Regional do Trabalho" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="color: rgba(255,255,255,0.9); font-size: 13px; display: block; margin-bottom: 5px;">🎓 Escolaridade</label>
+                                <input type="text" id="inputEscolaridade" placeholder="Ex: Superior Completo" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 14px;">
+                            </div>
+                        </div>
+                        <button onclick="salvarInfoEdital()" style="margin-top: 20px; padding: 12px 24px; background: white; color: #667eea; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s;">
+                            ✅ Salvar Informações
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Stats Cards -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
                     <!-- Total Matérias -->
@@ -3492,58 +3563,134 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         // ==================== DASHBOARD ====================
 
+        // Funções para Informações do Edital
+        function toggleEditarInfoEdital() {
+            const displayMode = document.getElementById('editalInfoDisplay');
+            const editMode = document.getElementById('editalInfoEdit');
+            const btnText = document.getElementById('editEditalInfo');
+
+            if (editMode.style.display === 'none') {
+                // Carregar valores atuais nos inputs
+                const info = Storage.get('editalInfo', {});
+                document.getElementById('inputCargo').value = info.cargo || '';
+                document.getElementById('inputDataProva').value = info.dataProva || '';
+                document.getElementById('inputVagas').value = info.vagas || '';
+                document.getElementById('inputSalario').value = info.salario || '';
+                document.getElementById('inputOrgao').value = info.orgao || '';
+                document.getElementById('inputEscolaridade').value = info.escolaridade || '';
+
+                displayMode.style.display = 'none';
+                editMode.style.display = 'block';
+                btnText.innerHTML = '❌ Cancelar';
+            } else {
+                displayMode.style.display = 'grid';
+                editMode.style.display = 'none';
+                btnText.innerHTML = '✏️ Editar';
+            }
+        }
+
+        function salvarInfoEdital() {
+            const info = {
+                cargo: document.getElementById('inputCargo').value,
+                dataProva: document.getElementById('inputDataProva').value,
+                vagas: document.getElementById('inputVagas').value,
+                salario: document.getElementById('inputSalario').value,
+                orgao: document.getElementById('inputOrgao').value,
+                escolaridade: document.getElementById('inputEscolaridade').value
+            };
+
+            Storage.set('editalInfo', info);
+            loadEditalInfo();
+            toggleEditarInfoEdital();
+            updateDashboard(); // Atualizar countdown com nova data
+            showNotification('✅ Informações salvas com sucesso!');
+        }
+
+        function loadEditalInfo() {
+            const info = Storage.get('editalInfo', {});
+
+            document.getElementById('displayCargo').textContent = info.cargo || 'Não informado';
+            document.getElementById('displayVagas').textContent = info.vagas || 'Não informado';
+            document.getElementById('displaySalario').textContent = info.salario || 'Não informado';
+            document.getElementById('displayOrgao').textContent = info.orgao || 'Não informado';
+            document.getElementById('displayEscolaridade').textContent = info.escolaridade || 'Não informado';
+
+            if (info.dataProva) {
+                const [year, month, day] = info.dataProva.split('-');
+                document.getElementById('displayDataProva').textContent = `${day}/${month}/${year}`;
+            } else {
+                document.getElementById('displayDataProva').textContent = 'Não informado';
+            }
+        }
+
         function updateDashboard() {
-            // Get studied topics from localStorage
-            const studiedTopics = Storage.get('studiedTopics', {});
+            // Get passadas from localStorage (novo sistema)
+            const passadas = Storage.get('topicPassadas', {});
 
             // Calculate stats
             let totalMaterias = Object.keys(extractedEditalTopics).length;
             let totalTopicos = 0;
-            let topicosEstudados = 0;
+            let topicosComPassada = 0; // Tópicos com pelo menos 1 passada
+            let pontuacaoTotal = 0; // Pontuação total considerando passadas (máx 3 por tópico)
+            let pontuacaoAtual = 0; // Pontuação atual
 
             Object.keys(extractedEditalTopics).forEach(materia => {
                 const topicos = extractedEditalTopics[materia];
                 totalTopicos += topicos.length;
+                pontuacaoTotal += topicos.length * 3; // Cada tópico pode ter 3 passadas
 
                 // Count studied topics for this materia
-                if (studiedTopics[materia]) {
-                    topicosEstudados += studiedTopics[materia].length;
+                if (passadas[materia]) {
+                    topicos.forEach(topico => {
+                        const numPassadas = passadas[materia][topico] || 0;
+                        if (numPassadas > 0) {
+                            topicosComPassada++;
+                        }
+                        pontuacaoAtual += numPassadas;
+                    });
                 }
             });
 
-            const percentual = totalTopicos > 0 ? Math.round((topicosEstudados / totalTopicos) * 100) : 0;
+            const percentual = pontuacaoTotal > 0 ? Math.round((pontuacaoAtual / pontuacaoTotal) * 100) : 0;
 
             // Update stats cards
             document.getElementById('totalMaterias').textContent = totalMaterias;
             document.getElementById('totalTopicos').textContent = totalTopicos;
-            document.getElementById('topicosEstudados').textContent = topicosEstudados;
+            document.getElementById('topicosEstudados').textContent = topicosComPassada;
             document.getElementById('percentualProgresso').textContent = percentual + '%';
 
             // Update countdown
             updateExamCountdown();
 
             // Update progress bars per materia
-            renderMateriasProgress(studiedTopics);
+            renderMateriasProgress(passadas);
         }
 
         function updateExamCountdown() {
-            const savedEditais = Storage.get('savedEditais', []);
-
-            // Find most recent exam date
+            // PRIORIDADE 1: Data manual (definida pelo usuário)
+            const editalInfo = Storage.get('editalInfo', {});
             let examDate = null;
-            savedEditais.forEach(edital => {
-                if (edital.response && edital.response.includes('Data da Prova:')) {
-                    // Try to extract date from analysis
-                    const match = edital.response.match(/Data da Prova:?\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
-                    if (match) {
-                        const [day, month, year] = match[1].split('/');
-                        const date = new Date(year, month - 1, day);
-                        if (!examDate || date < examDate) {
-                            examDate = date;
+
+            if (editalInfo.dataProva) {
+                const [year, month, day] = editalInfo.dataProva.split('-');
+                examDate = new Date(year, month - 1, day);
+            } else {
+                // PRIORIDADE 2: Data extraída da análise do edital
+                const savedEditais = Storage.get('savedEditais', []);
+                savedEditais.forEach(edital => {
+                    if (edital.response && edital.response.includes('Data da Prova:')) {
+                        // Try to extract date from analysis
+                        const match = edital.response.match(/Data da Prova:?\s*(\d{1,2}\/\d{1,2}\/\d{4})/);
+                        if (match) {
+                            const [day, month, year] = match[1].split('/');
+                            const date = new Date(year, month - 1, day);
+                            if (!examDate || date < examDate) {
+                                examDate = date;
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
 
             if (examDate) {
                 const today = new Date();
@@ -3572,7 +3719,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             }
         }
 
-        function renderMateriasProgress(studiedTopics) {
+        function renderMateriasProgress(passadas) {
             const container = document.getElementById('materiasProgressList');
 
             if (Object.keys(extractedEditalTopics).length === 0) {
@@ -3590,8 +3737,25 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             Object.keys(extractedEditalTopics).forEach(materia => {
                 const topicos = extractedEditalTopics[materia];
                 const totalTopicos = topicos.length;
-                const estudados = studiedTopics[materia] ? studiedTopics[materia].length : 0;
-                const percentual = totalTopicos > 0 ? Math.round((estudados / totalTopicos) * 100) : 0;
+
+                // Calcular progresso baseado nas passadas
+                let pontuacaoMaxima = totalTopicos * 3; // 3 passadas por tópico
+                let pontuacaoAtual = 0;
+                let topicosComPassada = 0;
+                let passada1 = 0, passada2 = 0, passada3 = 0;
+
+                if (passadas[materia]) {
+                    topicos.forEach(topico => {
+                        const numPassadas = passadas[materia][topico] || 0;
+                        pontuacaoAtual += numPassadas;
+                        if (numPassadas > 0) topicosComPassada++;
+                        if (numPassadas >= 1) passada1++;
+                        if (numPassadas >= 2) passada2++;
+                        if (numPassadas >= 3) passada3++;
+                    });
+                }
+
+                const percentual = pontuacaoMaxima > 0 ? Math.round((pontuacaoAtual / pontuacaoMaxima) * 100) : 0;
 
                 html += `
                     <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent-primary);">
@@ -3604,14 +3768,17 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                             <div style="background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary)); height: 100%; width: ${percentual}%; transition: width 0.5s ease;"></div>
                         </div>
 
-                        <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--text-secondary);">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
                             <span>📋 ${totalTopicos} tópicos</span>
-                            <span>✅ ${estudados} estudados</span>
-                            <span>⏳ ${totalTopicos - estudados} restantes</span>
+                            <span>✅ ${topicosComPassada} iniciados</span>
+                            <span style="color: #ffc107;">📖 ${passada1} (1ª passada)</span>
+                            <span style="color: #2196F3;">🔄 ${passada2} (2ª passada)</span>
+                            <span style="color: #4CAF50;">✓ ${passada3} (3ª passada)</span>
+                            <span>⏳ ${totalTopicos - topicosComPassada} não iniciados</span>
                         </div>
 
-                        <button onclick="showTopicsForMateria('${materia}')" style="margin-top: 15px; padding: 8px 16px; background: var(--accent-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s;">
-                            📖 Ver Tópicos
+                        <button onclick="showTopicsForMateria('${materia}')" style="margin-top: 15px; padding: 10px 16px; background: var(--accent-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s;">
+                            📖 Marcar Passadas
                         </button>
                     </div>
                 `;
@@ -3622,23 +3789,69 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         function showTopicsForMateria(materia) {
             const topicos = extractedEditalTopics[materia] || [];
-            const studiedTopics = Storage.get('studiedTopics', {});
-            const estudados = studiedTopics[materia] || [];
+            const passadas = Storage.get('topicPassadas', {}); // Nova estrutura: { materia: { topico: 0-3 } }
+
+            if (!passadas[materia]) {
+                passadas[materia] = {};
+            }
 
             let html = `
                 <div style="background: var(--bg-secondary); padding: 25px; border-radius: 16px;">
-                    <h3 style="color: var(--accent-primary); margin-bottom: 20px;">📚 ${materia}</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <h3 style="color: var(--accent-primary); margin-bottom: 15px;">📚 ${materia}</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
+                        💡 Clique nos botões para marcar suas passadas em cada tópico:
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
             `;
 
             topicos.forEach((topico, idx) => {
-                const isStudied = estudados.includes(topico);
+                const currentPassada = passadas[materia][topico] || 0;
+
+                // Definir cores e estilos baseados na passada
+                let bgColor = 'var(--bg-tertiary)';
+                let borderColor = 'transparent';
+                let opacity = '1';
+
+                if (currentPassada === 1) {
+                    bgColor = 'rgba(255, 193, 7, 0.15)'; // Amarelo claro
+                    borderColor = '#ffc107';
+                } else if (currentPassada === 2) {
+                    bgColor = 'rgba(33, 150, 243, 0.15)'; // Azul claro
+                    borderColor = '#2196F3';
+                } else if (currentPassada === 3) {
+                    bgColor = 'rgba(76, 175, 80, 0.15)'; // Verde claro
+                    borderColor = '#4CAF50';
+                    opacity = '0.8';
+                }
+
                 html += `
-                    <div style="display: flex; align-items: center; gap: 12px; background: var(--bg-tertiary); padding: 15px; border-radius: 10px;">
-                        <input type="checkbox" ${isStudied ? 'checked' : ''}
-                               onchange="toggleTopicStudied('${materia}', '${topico.replace(/'/g, "\\'")}', this.checked)"
-                               style="width: 20px; height: 20px; cursor: pointer;">
-                        <span style="flex: 1; color: var(--text-primary); ${isStudied ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${idx + 1}. ${topico}</span>
+                    <div style="background: ${bgColor}; border: 2px solid ${borderColor}; padding: 15px; border-radius: 12px; opacity: ${opacity}; transition: all 0.3s;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="flex: 1; color: var(--text-primary); font-size: 15px; font-weight: 500;">${idx + 1}. ${topico}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="marcarPassada('${materia}', '${topico.replace(/'/g, "\\'")}', 1)"
+                                    style="flex: 1; padding: 10px; background: ${currentPassada >= 1 ? '#ffc107' : 'var(--bg-secondary)'};
+                                           color: ${currentPassada >= 1 ? 'white' : 'var(--text-secondary)'};
+                                           border: 2px solid ${currentPassada >= 1 ? '#ffc107' : 'var(--border)'};
+                                           border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">
+                                ${currentPassada >= 1 ? '✓' : ''} 1ª Passada
+                            </button>
+                            <button onclick="marcarPassada('${materia}', '${topico.replace(/'/g, "\\'")}', 2)"
+                                    style="flex: 1; padding: 10px; background: ${currentPassada >= 2 ? '#2196F3' : 'var(--bg-secondary)'};
+                                           color: ${currentPassada >= 2 ? 'white' : 'var(--text-secondary)'};
+                                           border: 2px solid ${currentPassada >= 2 ? '#2196F3' : 'var(--border)'};
+                                           border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">
+                                ${currentPassada >= 2 ? '✓' : ''} 2ª Passada
+                            </button>
+                            <button onclick="marcarPassada('${materia}', '${topico.replace(/'/g, "\\'")}', 3)"
+                                    style="flex: 1; padding: 10px; background: ${currentPassada >= 3 ? '#4CAF50' : 'var(--bg-secondary)'};
+                                           color: ${currentPassada >= 3 ? 'white' : 'var(--text-secondary)'};
+                                           border: 2px solid ${currentPassada >= 3 ? '#4CAF50' : 'var(--border)'};
+                                           border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">
+                                ${currentPassada >= 3 ? '✓' : ''} 3ª Passada
+                            </button>
+                        </div>
                     </div>
                 `;
             });
@@ -3647,7 +3860,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     </div>
                     <button onclick="updateDashboard(); document.getElementById('topicsModal').remove();"
                             style="margin-top: 20px; width: 100%; padding: 12px; background: var(--accent-primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px;">
-                        ✅ Fechar
+                        ✅ Fechar e Atualizar
                     </button>
                 </div>
             `;
@@ -3656,29 +3869,35 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             const modal = document.createElement('div');
             modal.id = 'topicsModal';
             modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;';
-            modal.innerHTML = `<div style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto;">${html}</div>`;
+            modal.innerHTML = `<div style="max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto;">${html}</div>`;
             document.body.appendChild(modal);
         }
 
-        function toggleTopicStudied(materia, topico, isChecked) {
-            const studiedTopics = Storage.get('studiedTopics', {});
+        function marcarPassada(materia, topico, passada) {
+            const passadas = Storage.get('topicPassadas', {});
 
-            if (!studiedTopics[materia]) {
-                studiedTopics[materia] = [];
+            if (!passadas[materia]) {
+                passadas[materia] = {};
             }
 
-            if (isChecked) {
-                // Add to studied
-                if (!studiedTopics[materia].includes(topico)) {
-                    studiedTopics[materia].push(topico);
+            // Se clicar na mesma passada, desmarca. Senão, marca a nova passada
+            if (passadas[materia][topico] === passada) {
+                passadas[materia][topico] = passada - 1;
+                if (passadas[materia][topico] === 0) {
+                    delete passadas[materia][topico];
                 }
+                showNotification(`↩️ ${passada}ª passada desmarcada!`);
             } else {
-                // Remove from studied
-                studiedTopics[materia] = studiedTopics[materia].filter(t => t !== topico);
+                passadas[materia][topico] = passada;
+                const emoji = passada === 1 ? '📖' : passada === 2 ? '🔄' : '✅';
+                showNotification(`${emoji} ${passada}ª passada marcada!`);
             }
 
-            Storage.set('studiedTopics', studiedTopics);
-            showNotification(isChecked ? '✅ Tópico marcado como estudado!' : '↩️ Tópico desmarcado');
+            Storage.set('topicPassadas', passadas);
+
+            // Reabrir o modal para atualizar visualmente
+            document.getElementById('topicsModal').remove();
+            showTopicsForMateria(materia);
         }
 
         function switchTab(tabName) {
@@ -3702,6 +3921,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         renderSavedEditais();
         renderSavedCronogramas();
+        loadEditalInfo();
         updateDashboard();
 
         // PWA - Register Service Worker

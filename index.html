@@ -4038,9 +4038,6 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         // Função para atualizar gráfico de linha (evolução do progresso)
         function atualizarGraficoLinha() {
-            // Primeiro, garantir que hoje está registrado
-            registrarProgressoHoje();
-
             const historicoProgresso = Storage.get('historicoProgresso', []);
 
             // Preparar dados
@@ -4048,12 +4045,9 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             const data = [];
 
             if (historicoProgresso.length === 0) {
-                // Se ainda não há histórico, mostrar gráfico vazio
-                const ctx = document.getElementById('chartLinha');
-                if (chartLinhaInstance) {
-                    chartLinhaInstance.destroy();
-                }
-                return;
+                // Se não há histórico, adicionar ponto atual
+                registrarProgressoHoje();
+                return; // Será chamado novamente após registrar
             }
 
             // Ordenar por data
@@ -4144,50 +4138,39 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         // Função para registrar progresso do dia (chamada ao atualizar dashboard)
         function registrarProgressoHoje() {
-            // Só registra se houver conteúdo programático
-            if (Object.keys(extractedEditalTopics).length === 0) {
-                return;
-            }
-
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0); // Zerar horas para comparar apenas a data
 
             const historicoProgresso = Storage.get('historicoProgresso', []);
 
-            // Calcular progresso atual
-            const passadas = Storage.get('topicPassadas', {});
-            let totalTopicos = 0;
-            let topicosComPassada = 0;
-
-            Object.keys(extractedEditalTopics).forEach(materia => {
-                const topicos = extractedEditalTopics[materia] || [];
-                totalTopicos += topicos.length;
-
-                topicos.forEach(topico => {
-                    const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
-                    if (numPassadas >= 1) {
-                        topicosComPassada++;
-                    }
-                });
-            });
-
-            const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
-
             // Verificar se já tem registro de hoje
-            const indexHoje = historicoProgresso.findIndex(registro => {
+            const jaRegistrouHoje = historicoProgresso.some(registro => {
                 const dataRegistro = new Date(registro.data);
                 dataRegistro.setHours(0, 0, 0, 0);
                 return dataRegistro.getTime() === hoje.getTime();
             });
 
-            if (indexHoje >= 0) {
-                // Atualizar registro de hoje se o percentual mudou
-                if (historicoProgresso[indexHoje].percentual !== percentual) {
-                    historicoProgresso[indexHoje].percentual = percentual;
-                    Storage.set('historicoProgresso', historicoProgresso);
-                }
-            } else {
-                // Adicionar novo registro
+            if (!jaRegistrouHoje) {
+                // Calcular progresso atual
+                const passadas = Storage.get('topicPassadas', {});
+                let totalTopicos = 0;
+                let topicosComPassada = 0;
+
+                Object.keys(extractedEditalTopics).forEach(materia => {
+                    const topicos = extractedEditalTopics[materia] || [];
+                    totalTopicos += topicos.length;
+
+                    topicos.forEach(topico => {
+                        const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
+                        if (numPassadas >= 1) {
+                            topicosComPassada++;
+                        }
+                    });
+                });
+
+                const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
+
+                // Adicionar registro
                 historicoProgresso.push({
                     data: hoje.toISOString(),
                     percentual: percentual

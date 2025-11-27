@@ -872,12 +872,16 @@
                         <input type="text" id="cronoCargo" placeholder="Ex: Analista Judiciário - TRT SP">
                     </div>
                     <div class="input-group">
-                        <label>📅 Data da Prova</label>
-                        <input type="date" id="cronoDataProva">
-                    </div>
-                    <div class="input-group">
                         <label>⏰ Horas/dia disponíveis</label>
                         <input type="number" id="cronoHorasDia" value="4" min="1" max="16">
+                    </div>
+                    <div class="input-group">
+                        <label>📚 Seu nível atual</label>
+                        <select id="cronoNivel">
+                            <option value="iniciante">Iniciante</option>
+                            <option value="intermediario" selected>Intermediário</option>
+                            <option value="avancado">Avançado</option>
+                        </select>
                     </div>
                 </div>
 
@@ -890,7 +894,7 @@
                         style="min-height: 300px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
                     ></textarea>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-                        💡 <strong>Dica:</strong> Cole o texto sem se preocupar com formatação. A IA irá identificar disciplinas, subdivisões e todos os tópicos automaticamente.
+                        💡 <strong>Dica:</strong> Cole o texto sem se preocupar com formatação. A IA irá identificar automaticamente: disciplinas, tópicos, data da prova e todas as informações relevantes!
                     </div>
                 </div>
 
@@ -3188,19 +3192,27 @@ Por favor, organize sua resposta de forma clara, destacando:
         // ETAPA 1: Análise Inteligente do Edital
         async function analisarEditalInteligente() {
             const cargo = document.getElementById('cronoCargo').value.trim();
-            const dataProva = document.getElementById('cronoDataProva').value;
             const horasDia = document.getElementById('cronoHorasDia').value;
+            const nivel = document.getElementById('cronoNivel').value;
             const editalBruto = document.getElementById('cronoEditalBruto').value.trim();
 
-            if (!cargo || !dataProva || !editalBruto) {
-                showNotification('⚠️ Preencha todos os campos obrigatórios');
+            if (!cargo || !editalBruto) {
+                showNotification('⚠️ Preencha o cargo e cole o texto do edital');
                 return;
             }
 
+            // Definir domínio base por nível
+            const dominioBase = {
+                'iniciante': 3,
+                'intermediario': 5,
+                'avancado': 7
+            }[nivel];
+
             // Salvar dados básicos
             cronogramaData.cargo = cargo;
-            cronogramaData.dataProva = dataProva;
             cronogramaData.horasDia = parseInt(horasDia);
+            cronogramaData.nivel = nivel;
+            cronogramaData.dominioBase = dominioBase;
 
             // Mostrar loading
             document.getElementById('cronoLoadingAnalise').style.display = 'block';
@@ -3208,9 +3220,10 @@ Por favor, organize sua resposta de forma clara, destacando:
 
             // Chamar IA para análise
             if (window.Poe) {
-                const prompt = `Você é um especialista em concursos públicos brasileiros. Analise o edital abaixo e forneça um JSON estruturado com as disciplinas, tópicos detalhados e análise de cada matéria.
+                const prompt = `Você é um especialista em concursos públicos brasileiros. Analise o edital abaixo e forneça um JSON estruturado com TODAS as informações.
 
 🎯 CARGO: ${cargo}
+📚 NÍVEL DO ESTUDANTE: ${nivel}
 
 📋 EDITAL COMPLETO:
 ${editalBruto}
@@ -3218,6 +3231,7 @@ ${editalBruto}
 IMPORTANTE: Retorne APENAS um JSON válido (sem markdown, sem explicações) no seguinte formato:
 
 {
+  "dataProva": "YYYY-MM-DD ou null se não encontrar",
   "disciplinas": [
     {
       "nome": "Nome da Disciplina",
@@ -3225,13 +3239,17 @@ IMPORTANTE: Retorne APENAS um JSON válido (sem markdown, sem explicações) no 
       "volume": 1-10 (escala de volume de conteúdo),
       "incidencia": 1-10 (frequência que cai em provas para esse cargo),
       "complexidade": 1-10 (dificuldade da matéria),
-      "dominioAluno": 5 (assumir nível médio inicialmente, será editável),
+      "dominioAluno": ${dominioBase} (use este valor como base para todas as disciplinas),
       "justificativa": "Breve explicação sobre incidência para o cargo"
     }
   ]
 }
 
-Extraia TODOS os tópicos detalhados. Use web search (você tem acesso) para determinar a incidência real de cada disciplina para o cargo "${cargo}".`;
+INSTRUÇÕES:
+1. Extraia a DATA DA PROVA do texto do edital (procure por datas, cronograma, etc.)
+2. Extraia TODOS os tópicos detalhados de cada disciplina
+3. Use web search (você tem acesso) para determinar a incidência real de cada disciplina para o cargo "${cargo}"
+4. Para dominioAluno, use ${dominioBase} como valor base (nível ${nivel})`;
 
                 try {
                     await window.Poe.sendUserMessage(`@GPT-5.1 ${prompt} --web_search True`, {
@@ -3272,6 +3290,17 @@ Extraia TODOS os tópicos detalhados. Use web search (você tem acesso) para det
                     throw new Error('Formato inválido: disciplinas não encontradas');
                 }
 
+                // Extrair data da prova
+                if (dados.dataProva && dados.dataProva !== 'null') {
+                    cronogramaData.dataProva = dados.dataProva;
+                } else {
+                    // Se não encontrou, usar 90 dias a partir de hoje como padrão
+                    const dataFutura = new Date();
+                    dataFutura.setDate(dataFutura.getDate() + 90);
+                    cronogramaData.dataProva = dataFutura.toISOString().split('T')[0];
+                    showNotification('⚠️ Data da prova não encontrada no edital. Usando 90 dias como padrão. Você pode editar depois.');
+                }
+
                 // Salvar disciplinas
                 cronogramaData.disciplinas = dados.disciplinas.map(d => ({
                     nome: d.nome || '',
@@ -3279,7 +3308,7 @@ Extraia TODOS os tópicos detalhados. Use web search (você tem acesso) para det
                     volume: parseInt(d.volume) || 5,
                     incidencia: parseInt(d.incidencia) || 5,
                     complexidade: parseInt(d.complexidade) || 5,
-                    dominioAluno: parseInt(d.dominioAluno) || 5,
+                    dominioAluno: parseInt(d.dominioAluno) || cronogramaData.dominioBase || 5,
                     justificativa: d.justificativa || '',
                     horasSugeridas: 0 // Será calculado
                 }));
@@ -3357,12 +3386,20 @@ Extraia TODOS os tópicos detalhados. Use web search (você tem acesso) para det
         function exibirRaioX() {
             const container = document.getElementById('cronoRaioX');
 
+            // Calcular dias restantes
+            const dataProva = new Date(cronogramaData.dataProva);
+            const hoje = new Date();
+            const diasRestantes = Math.ceil((dataProva - hoje) / (1000 * 60 * 60 * 24));
+            const dataProvaFormatada = dataProva.toLocaleDateString('pt-BR');
+
             let html = `
                 <div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 25px; border-radius: 12px; color: white; margin-bottom: 25px;">
                     <h3 style="margin: 0 0 10px 0; font-size: 24px;">🔬 Raio-X Completo do Edital</h3>
-                    <p style="margin: 0; opacity: 0.95;">${cronogramaData.cargo}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
-                        ${cronogramaData.disciplinas.length} disciplinas identificadas e analisadas pela IA
+                    <p style="margin: 0; opacity: 0.95; font-size: 18px;"><strong>${cronogramaData.cargo}</strong></p>
+                    <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">
+                        📅 Data da Prova: <strong>${dataProvaFormatada}</strong> ·
+                        ⏰ Faltam <strong>${diasRestantes} dias</strong> ·
+                        📚 ${cronogramaData.disciplinas.length} disciplinas analisadas
                     </p>
                 </div>
 

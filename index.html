@@ -760,21 +760,21 @@
                 <!-- Gráficos Visuais -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px;">
                     <!-- Gráfico de Pizza - Distribuição por Disciplina -->
-                    <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 16px; border: 2px solid var(--border); min-height: 280px;">
+                    <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 16px; border: 2px solid var(--border);">
                         <h3 style="margin-bottom: 15px; color: var(--text-primary); font-size: 18px; display: flex; align-items: center; gap: 10px;">
                             📊 Distribuição por Disciplina
                         </h3>
-                        <div style="position: relative; height: 220px;">
+                        <div style="position: relative; height: 350px;">
                             <canvas id="chartPizza"></canvas>
                         </div>
                     </div>
 
                     <!-- Gráfico de Linha - Progresso ao Longo do Tempo -->
-                    <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 16px; border: 2px solid var(--border); min-height: 280px;">
+                    <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 16px; border: 2px solid var(--border);">
                         <h3 style="margin-bottom: 15px; color: var(--text-primary); font-size: 18px; display: flex; align-items: center; gap: 10px;">
                             📈 Evolução do Progresso
                         </h3>
-                        <div style="position: relative; height: 220px;">
+                        <div style="position: relative; height: 350px;">
                             <canvas id="chartLinha"></canvas>
                         </div>
                     </div>
@@ -4004,10 +4004,10 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                             align: 'start',
                             labels: {
                                 color: textColor,
-                                padding: 12,
-                                boxWidth: 15,
+                                padding: 8,
+                                boxWidth: 12,
                                 font: {
-                                    size: 11
+                                    size: 10
                                 },
                                 textAlign: 'left',
                                 generateLabels: function(chart) {
@@ -4028,8 +4028,8 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                                     return [];
                                 }
                             },
-                            maxWidth: 600,
-                            maxHeight: 200
+                            maxWidth: 550,
+                            maxHeight: 120
                         },
                         tooltip: {
                             callbacks: {

@@ -725,6 +725,13 @@
                         <div style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 5px;" id="percentualProgresso">0%</div>
                         <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 500;">Progresso Geral</div>
                     </div>
+
+                    <!-- Troféu Geral -->
+                    <div id="trofeuGeral" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 25px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); display: none;">
+                        <div style="font-size: 48px; margin-bottom: 10px;" id="trofeuGeralEmoji">🏆</div>
+                        <div style="font-size: 16px; font-weight: 700; color: white; margin-bottom: 5px;" id="trofeuGeralNome">Troféu</div>
+                        <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 500;">Conquista Desbloqueada!</div>
+                    </div>
                 </div>
 
                 <!-- Countdown Timer -->
@@ -788,6 +795,7 @@
                     <textarea id="conteudoProgramatico" placeholder="Português: Concordância verbal, Coesão e coerência, Ortografia oficial&#10;Matemática: Juros simples, Juros compostos, Estatística básica&#10;Direito Administrativo: Atos administrativos, Licitações, Contratos" style="min-height: 200px;"></textarea>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button class="btn btn-secondary" id="processarConteudo" style="flex: 1;">✅ Processar Conteúdo Programático</button>
+                        <button class="btn" onclick="carregarConteudoParaEdicao()" style="flex: 1; background: var(--accent-secondary);">✏️ Carregar para Editar</button>
                         <button class="btn" onclick="limparConteudoProgramatico()" style="background: #dc3545; flex: 1;">🗑️ Limpar Tudo</button>
                     </div>
                 </div>
@@ -3674,6 +3682,17 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             document.getElementById('topicosEstudados').textContent = topicosComPassada;
             document.getElementById('percentualProgresso').textContent = percentual + '%';
 
+            // Update troféu geral
+            const trofeuGeral = getTrofeu(percentual);
+            const trofeuCard = document.getElementById('trofeuGeral');
+            if (trofeuGeral) {
+                document.getElementById('trofeuGeralEmoji').textContent = trofeuGeral.emoji;
+                document.getElementById('trofeuGeralNome').textContent = trofeuGeral.nome;
+                trofeuCard.style.display = 'block';
+            } else {
+                trofeuCard.style.display = 'none';
+            }
+
             // Update countdown
             updateExamCountdown();
 
@@ -3737,6 +3756,20 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
         // Variável global para guardar quais matérias estão expandidas
         let expandedMaterias = new Set();
 
+        // Sistema de troféus/medalhas por progresso
+        function getTrofeu(percentual) {
+            if (percentual >= 100) {
+                return { emoji: '🥇', nome: 'Troféu de Ouro - 100%' };
+            } else if (percentual >= 50) {
+                return { emoji: '🥈', nome: 'Troféu de Prata - 50%' };
+            } else if (percentual >= 30) {
+                return { emoji: '🥉', nome: 'Troféu de Bronze - 30%' };
+            } else if (percentual >= 20) {
+                return { emoji: '⭐', nome: 'Medalha de Participação - 20%' };
+            }
+            return null;
+        }
+
         function renderMateriasProgress(passadas) {
             const container = document.getElementById('materiasProgressList');
 
@@ -3779,6 +3812,9 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 // 2ª e 3ª passadas são REVISÕES, não afetam o progresso principal
                 const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
 
+                // Sistema de troféus/medalhas
+                const trofeu = getTrofeu(percentual);
+
                 // Verificar se esta matéria está expandida
                 const isExpanded = expandedMaterias.has(materiaId);
                 const displayStyle = isExpanded ? 'block' : 'none';
@@ -3792,6 +3828,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                                 <h4 style="margin: 0; color: var(--text-primary); font-size: 18px;">${materia}</h4>
                             </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
+                                ${trofeu ? `<span style="font-size: 24px;" title="${trofeu.nome}">${trofeu.emoji}</span>` : ''}
                                 <span style="font-size: 16px; font-weight: 700; color: var(--accent-primary);">${percentual}%</span>
                                 <button onclick="deleteMateria('${materia}')"
                                         title="Excluir esta matéria"
@@ -3963,6 +4000,28 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 showNotification(`🗑️ Matéria "${materia}" excluída com sucesso!`);
                 updateDashboard();
             });
+        }
+
+        function carregarConteudoParaEdicao() {
+            if (Object.keys(extractedEditalTopics).length === 0) {
+                showNotification('⚠️ Não há conteúdo salvo para editar!');
+                return;
+            }
+
+            // Converter o objeto de volta para o formato de texto
+            let conteudoTexto = '';
+            Object.keys(extractedEditalTopics).forEach(materia => {
+                const topicos = extractedEditalTopics[materia];
+                conteudoTexto += `${materia}: ${topicos.join(', ')}\n`;
+            });
+
+            // Colocar no textarea
+            document.getElementById('conteudoProgramatico').value = conteudoTexto.trim();
+
+            showNotification('✏️ Conteúdo carregado! Edite e clique em "Processar" novamente.');
+
+            // Scroll para o textarea
+            document.getElementById('conteudoProgramatico').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function limparConteudoProgramatico() {

@@ -814,48 +814,72 @@
         <!-- TAB: ANÁLISE DE EDITAL -->
         <div id="edital" class="tab-content">
             <div class="card">
-                <h2>Analisar Edital com IA</h2>
+                <h2>Analisar Edital</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                    Arraste um PDF do edital ou cole o texto diretamente. A IA irá analisar e extrair informações importantes.
+                    Arraste um PDF do edital ou cole o texto diretamente. O sistema irá analisar e extrair informações importantes.
                 </p>
 
-                <!-- PDF Upload Area -->
-                <div id="pdfDropArea" style="border: 2px dashed var(--border); border-radius: 12px; padding: 40px; text-align: center; margin-bottom: 20px; background: var(--bg-tertiary); cursor: pointer; transition: all 0.3s ease;">
-                    <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
-                    <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Arraste o PDF do edital aqui</p>
-                    <p style="color: var(--text-secondary); font-size: 14px;">ou clique para selecionar o arquivo</p>
+                <!-- PDF Upload Area (COMPACTO) -->
+                <div id="pdfDropArea" style="border: 2px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 15px; background: var(--bg-tertiary); cursor: pointer; transition: all 0.3s ease; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 15px;">
+                    <div style="font-size: 32px;">📄</div>
+                    <div>
+                        <p style="color: var(--text-primary); font-weight: 600; margin: 0;">Arraste o PDF aqui</p>
+                        <p style="color: var(--text-secondary); font-size: 13px; margin: 0;">ou clique para selecionar</p>
+                    </div>
                     <input type="file" id="pdfFileInput" accept=".pdf" style="display: none;">
                 </div>
 
-                <div style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
-                    <strong>━━━━━ OU ━━━━━</strong>
+                <div style="text-align: center; color: var(--text-secondary); margin: 15px 0; font-size: 13px;">
+                    ━━━━━ OU ━━━━━
                 </div>
 
+                <!-- Campo único para texto (mostra PDF extraído aqui também) -->
                 <div class="input-group">
-                    <label>Texto do Edital (para análise geral)</label>
-                    <textarea id="editalInput" placeholder="Cole o edital completo. A análise extrairá informações gerais como data da prova, matérias, quantidade de questões, etc." oninput="if(this.value.trim().length > 100) { setTimeout(() => document.getElementById('analyzeEdital').click(), 1000); }"></textarea>
+                    <label>Texto do Edital</label>
+                    <textarea id="editalInput" placeholder="Cole o texto completo do edital aqui. Após arrastar o PDF, o texto aparecerá automaticamente neste campo." style="min-height: 250px;"></textarea>
                 </div>
 
-                <div class="input-group" style="margin-top: 20px;">
-                    <label>📋 Conteúdo Programático (cole aqui APENAS o conteúdo das matérias)</label>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
-                        <strong>Formato:</strong> Uma matéria por linha, seguida de seus tópicos separados por vírgula ou ponto-e-vírgula.<br>
-                        <strong>Exemplo:</strong><br>
-                        <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; display: block; margin-top: 5px;">
-                        Português: Concordância verbal, Coesão e coerência, Ortografia oficial<br>
-                        Matemática: Juros simples, Juros compostos, Estatística básica<br>
-                        Direito Administrativo: Atos administrativos, Licitações, Contratos
-                        </code>
-                    </p>
-                    <textarea id="conteudoProgramatico" placeholder="Português: Concordância verbal, Coesão e coerência, Ortografia oficial&#10;Matemática: Juros simples, Juros compostos, Estatística básica&#10;Direito Administrativo: Atos administrativos, Licitações, Contratos" style="min-height: 200px;"></textarea>
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                        <button class="btn btn-secondary" id="processarConteudo" style="flex: 1;">✅ Processar Conteúdo Programático</button>
-                        <button class="btn" onclick="carregarConteudoParaEdicao()" style="flex: 1; background: var(--accent-secondary);">✏️ Carregar para Editar</button>
-                        <button class="btn" onclick="limparConteudoProgramatico()" style="background: #dc3545; flex: 1;">🗑️ Limpar Tudo</button>
+                <!-- Botão Analisar PRIMEIRO -->
+                <button class="btn" id="analyzeEdital" style="width: 100%; font-size: 16px; padding: 15px; margin-bottom: 20px;">
+                    🔍 Analisar Edital
+                </button>
+
+                <!-- Resultado: Disciplinas em lista vertical -->
+                <div id="disciplinasExtraidas" style="display: none; margin-bottom: 20px;">
+                    <h3 style="color: var(--text-primary); margin-bottom: 15px;">📚 Disciplinas Identificadas</h3>
+                    <div id="listaDisciplinas" style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; border: 2px solid var(--border);">
+                        <!-- Lista será preenchida aqui -->
                     </div>
                 </div>
 
-                <button class="btn" id="analyzeEdital" style="display: none;">🤖 Analisar</button>
+                <!-- Conteúdo Programático (preenchido automaticamente pela análise) -->
+                <div class="input-group">
+                    <label>📋 Conteúdo Programático</label>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                        Após analisar, o sistema preenche automaticamente. Uma matéria por linha com seus tópicos.<br>
+                        <strong>Exemplo:</strong> Português: Concordância verbal, Ortografia, Interpretação de textos
+                    </p>
+                    <textarea id="conteudoProgramatico" placeholder="Será preenchido automaticamente após a análise..." style="min-height: 150px;"></textarea>
+                </div>
+
+                <!-- Botões simplificados -->
+                <div style="display: flex; gap: 10px; margin-top: 15px; align-items: center;">
+                    <button class="btn" id="processarConteudo" style="flex: 2;">
+                        ✅ Processar Conteúdo
+                    </button>
+                    <button class="btn btn-secondary" onclick="limparConteudoProgramatico()" style="flex: 1;">
+                        🗑️ Limpar
+                    </button>
+                    <div style="flex: 2; display: flex; align-items: center; gap: 10px;">
+                        <label style="color: var(--text-secondary); font-size: 13px; white-space: nowrap;">Velocidade:</label>
+                        <input type="range" id="analysisSpeed" min="0.5" max="2" step="0.1" value="1" style="flex: 1;">
+                        <span id="speedValue" style="color: var(--text-primary); font-weight: 600; min-width: 40px;">1.0x</span>
+                        <button class="btn btn-secondary" onclick="ouvirAnalise()" style="padding: 10px 20px;">
+                            🎧 Ouvir
+                        </button>
+                    </div>
+                </div>
+
                 <div id="editalOutput" style="margin-top: 20px;"></div>
             </div>
 

@@ -839,8 +839,8 @@
                     <textarea id="editalInput" placeholder="Cole o texto completo do edital aqui. Após arrastar o PDF, o texto aparecerá automaticamente neste campo." style="min-height: 250px;"></textarea>
                 </div>
 
-                <!-- Botão Analisar PRIMEIRO -->
-                <button class="btn" id="analyzeEdital" style="width: 100%; font-size: 16px; padding: 15px; margin-bottom: 20px;">
+                <!-- Botão Analisar PRIMEIRO (tamanho normal) -->
+                <button class="btn" id="analyzeEdital" style="font-size: 16px; padding: 12px 24px; margin-bottom: 20px;">
                     🔍 Analisar Edital
                 </button>
 
@@ -872,8 +872,8 @@
                     </button>
                     <div style="flex: 2; display: flex; align-items: center; gap: 10px;">
                         <label style="color: var(--text-secondary); font-size: 13px; white-space: nowrap;">Velocidade:</label>
-                        <input type="range" id="analysisSpeed" min="0.5" max="2" step="0.1" value="1" style="flex: 1;">
-                        <span id="speedValue" style="color: var(--text-primary); font-weight: 600; min-width: 40px;">1.0x</span>
+                        <input type="range" id="analysisSpeed" min="0.5" max="4" step="0.1" value="1" style="flex: 1;" oninput="document.getElementById('speedValue').textContent = this.value + 'x'">
+                        <span id="speedValue" style="color: var(--text-primary); font-weight: 600; min-width: 45px;">1.0x</span>
                         <button class="btn btn-secondary" onclick="ouvirAnalise()" style="padding: 10px 20px;">
                             🎧 Ouvir
                         </button>
@@ -2287,17 +2287,68 @@ Por favor, organize sua resposta de forma clara, destacando:
 
                     console.log('Disciplinas encontradas:', foundSubjects);
 
-                    // Calculate days until exam
+                    // NOVA FUNCIONALIDADE: Mostrar disciplinas em lista vertical
+                    if (foundSubjects.length > 0) {
+                        mostrarDisciplinasVerticais(foundSubjects);
+                    }
+
+                    // NOVA FUNCIONALIDADE: Preencher conteúdo programático automaticamente
+                    preencherConteudoProgramatico(input, foundSubjects);
+
+                    // Calculate days until exam - MELHORADO para buscar em múltiplos formatos
                     let daysUntilExam = null;
-                    const provaRegex = /prova[^\n]{0,50}(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/gi;
-                    const provaMatch = input.match(provaRegex);
-                    if (provaMatch) {
-                        const dateStr = provaMatch[0].match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);
-                        if (dateStr) {
-                            const parts = dateStr[0].split(/[\/\-]/);
-                            const examDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                            daysUntilExam = Math.ceil((examDate - new Date()) / (1000 * 60 * 60 * 24));
+                    let dataProva = null;
+
+                    // Estratégia 1: Procurar por "data da prova", "realização da prova", etc.
+                    const provaPatterns = [
+                        /(?:data\s+da\s+prova|realização\s+da\s+prova|aplicação\s+da\s+prova|prova\s+objetiva)[^\n]{0,80}?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/gi,
+                        /prova[^\n]{0,50}?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/gi,
+                        /(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})[^\n]{0,50}?prova/gi
+                    ];
+
+                    for (const pattern of provaPatterns) {
+                        const match = input.match(pattern);
+                        if (match && match.length > 0) {
+                            const dateStr = match[0].match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/);
+                            if (dateStr) {
+                                dataProva = dateStr[0];
+                                break;
+                            }
                         }
+                    }
+
+                    // Estratégia 2: Se não encontrou, procurar na seção "Datas Importantes" ou "Cronograma"
+                    if (!dataProva) {
+                        const datasImportantesRegex = /(?:datas?\s+importantes?|cronograma)[^\n]*?\n([^]*?)(?:\n\n|$)/gi;
+                        const secaoMatch = input.match(datasImportantesRegex);
+                        if (secaoMatch && secaoMatch.length > 0) {
+                            // Procurar por datas nesta seção
+                            const todasDatas = secaoMatch[0].match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/g);
+                            if (todasDatas && todasDatas.length > 0) {
+                                // Pegar a última data (geralmente é a data da prova)
+                                dataProva = todasDatas[todasDatas.length - 1];
+                            }
+                        }
+                    }
+
+                    // Calcular dias até a prova
+                    if (dataProva) {
+                        try {
+                            const parts = dataProva.split(/[\/\-\.]/);
+                            const examDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            daysUntilExam = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
+
+                            console.log('✅ Data da prova encontrada:', dataProva, '- Dias restantes:', daysUntilExam);
+
+                            // Salvar no AppData
+                            AppData.edital.dataProva = dataProva;
+                        } catch (e) {
+                            console.error('Erro ao processar data:', e);
+                        }
+                    } else {
+                        console.log('⚠️ Data da prova não encontrada no edital');
                     }
 
                     console.log('Dias até a prova:', daysUntilExam);
@@ -2378,6 +2429,16 @@ Por favor, organize sua resposta de forma clara, destacando:
                     });
                     Storage.set('savedEditais', savedEditais);
                     renderSavedEditais();
+
+                    // Salvar dados no AppData para uso nas outras abas
+                    AppData.edital.textoCompleto = input;
+                    AppData.edital.disciplinas = foundSubjects.map(nome => ({
+                        nome: nome,
+                        topicos: extractedEditalTopics[nome] || []
+                    }));
+                    AppData.edital.analisadoEm = new Date().toISOString();
+                    AppData.salvar();
+                    console.log('✅ Dados salvos no AppData:', AppData.edital.disciplinas.length, 'disciplinas');
 
                     showNotification('✅ Análise concluída com sucesso!');
                     console.log('Análise completa finalizada!');
@@ -2854,6 +2915,59 @@ Por favor, organize sua resposta de forma clara, destacando:
                 console.log(`❌ FALHA! Nenhum tópico extraído para "${subject}"`);
             }
             return topics.slice(0, 50); // Limit to 50 topics per subject
+        }
+
+        // Mostrar disciplinas em lista vertical (área de resultado na aba Análise de Edital)
+        function mostrarDisciplinasVerticais(foundSubjects) {
+            const container = document.getElementById('disciplinasExtraidas');
+            const lista = document.getElementById('listaDisciplinas');
+
+            if (!foundSubjects || foundSubjects.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            let html = '<div style="display: grid; gap: 10px;">';
+
+            foundSubjects.forEach((disciplina, index) => {
+                html += `
+                    <div style="display: flex; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 6px; border-left: 4px solid var(--accent-primary);">
+                        <span style="font-weight: 600; color: var(--accent-primary); margin-right: 12px; font-size: 18px;">${index + 1}.</span>
+                        <span style="color: var(--text-primary); font-weight: 500;">${disciplina}</span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            lista.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // Preencher conteúdo programático automaticamente
+        function preencherConteudoProgramatico(textoCompleto, foundSubjects) {
+            const textarea = document.getElementById('conteudoProgramatico');
+
+            if (!foundSubjects || foundSubjects.length === 0) {
+                textarea.value = '';
+                return;
+            }
+
+            let conteudo = '';
+
+            foundSubjects.forEach((disciplina, index) => {
+                // Extrair tópicos para esta disciplina
+                const topicos = extractTopics(textoCompleto, disciplina);
+
+                // Formatar: Disciplina: tópico1, tópico2, tópico3
+                if (topicos && topicos.length > 0) {
+                    conteudo += `${disciplina}: ${topicos.join(', ')}\n`;
+                } else {
+                    // Se não encontrou tópicos específicos, deixar em branco para o usuário preencher
+                    conteudo += `${disciplina}: \n`;
+                }
+            });
+
+            textarea.value = conteudo.trim();
         }
 
         // Generate verticalized syllabus

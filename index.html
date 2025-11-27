@@ -786,7 +786,10 @@
                         </code>
                     </p>
                     <textarea id="conteudoProgramatico" placeholder="Português: Concordância verbal, Coesão e coerência, Ortografia oficial&#10;Matemática: Juros simples, Juros compostos, Estatística básica&#10;Direito Administrativo: Atos administrativos, Licitações, Contratos" style="min-height: 200px;"></textarea>
-                    <button class="btn btn-secondary" id="processarConteudo" style="margin-top: 10px;">✅ Processar Conteúdo Programático</button>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn btn-secondary" id="processarConteudo" style="flex: 1;">✅ Processar Conteúdo Programático</button>
+                        <button class="btn" onclick="limparConteudoProgramatico()" style="background: #dc3545; flex: 1;">🗑️ Limpar Tudo</button>
+                    </div>
                 </div>
 
                 <button class="btn" id="analyzeEdital" style="display: none;">🤖 Analisar</button>
@@ -3774,7 +3777,14 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     });
                 }
 
-                const percentual = pontuacaoMaxima > 0 ? Math.round((pontuacaoAtual / pontuacaoMaxima) * 100) : 0;
+                // NOVA LÓGICA: Progresso por passada completa
+                // 1ª passada completa = 33%, 2ª = 66%, 3ª = 100%
+                let percentualPassada1 = totalTopicos > 0 ? (passada1 / totalTopicos) * 100 : 0;
+                let percentualPassada2 = totalTopicos > 0 ? (passada2 / totalTopicos) * 100 : 0;
+                let percentualPassada3 = totalTopicos > 0 ? (passada3 / totalTopicos) * 100 : 0;
+
+                // Percentual geral = média das 3 passadas (cada uma vale 33.33%)
+                const percentual = Math.round((percentualPassada1 + percentualPassada2 + percentualPassada3) / 3);
 
                 // Verificar se esta matéria está expandida
                 const isExpanded = expandedMaterias.has(materiaId);
@@ -3783,12 +3793,19 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
                 html += `
                     <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent-primary);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: pointer;" onclick="toggleMateriaTopics('${materiaId}')">
-                            <h4 style="margin: 0; color: var(--text-primary); font-size: 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;" onclick="toggleMateriaTopics('${materiaId}')">
                                 <span id="arrow_${materiaId}" style="display: inline-block; transition: transform 0.3s; transform: ${arrowRotation};">▶</span>
-                                ${materia}
-                            </h4>
-                            <span style="font-size: 16px; font-weight: 700; color: var(--accent-primary);">${percentual}%</span>
+                                <h4 style="margin: 0; color: var(--text-primary); font-size: 18px;">${materia}</h4>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 16px; font-weight: 700; color: var(--accent-primary);">${percentual}%</span>
+                                <button onclick="deleteMateria('${materia}')"
+                                        title="Excluir esta matéria"
+                                        style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;">
+                                    🗑️
+                                </button>
+                            </div>
                         </div>
 
                         <div style="background: var(--bg-secondary); height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
@@ -3898,6 +3915,43 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
             Storage.set('topicPassadas', passadas);
             updateDashboard();
+        }
+
+        function deleteMateria(materia) {
+            showConfirmDialog(`Tem certeza que deseja excluir a matéria "${materia}"?<br><br>⚠️ Isso também excluirá todo o progresso de passadas desta matéria.`, () => {
+                // Remover do conteúdo programático
+                delete extractedEditalTopics[materia];
+                Storage.set('conteudoProgramatico', extractedEditalTopics);
+
+                // Remover progresso de passadas
+                const passadas = Storage.get('topicPassadas', {});
+                delete passadas[materia];
+                Storage.set('topicPassadas', passadas);
+
+                // Remover do set de matérias expandidas
+                const materiaId = materia.replace(/\s/g, '_');
+                expandedMaterias.delete(materiaId);
+
+                showNotification(`🗑️ Matéria "${materia}" excluída com sucesso!`);
+                updateDashboard();
+            });
+        }
+
+        function limparConteudoProgramatico() {
+            showConfirmDialog('⚠️ <strong>ATENÇÃO!</strong><br><br>Isso irá excluir TODAS as matérias e TODO o progresso de passadas.<br><br>Tem certeza que deseja continuar?', () => {
+                // Limpar tudo
+                extractedEditalTopics = {};
+                Storage.set('conteudoProgramatico', {});
+                Storage.set('topicPassadas', {});
+                expandedMaterias.clear();
+
+                // Limpar textarea
+                document.getElementById('conteudoProgramatico').value = '';
+                document.getElementById('editalOutput').innerHTML = '';
+
+                showNotification('🗑️ Todo o conteúdo programático foi excluído!');
+                updateDashboard();
+            });
         }
 
         function switchTab(tabName) {

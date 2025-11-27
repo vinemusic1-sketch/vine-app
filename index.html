@@ -3467,7 +3467,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             console.log(`📝 ${rawLines.length} linhas originais → ${consolidatedLines.length} matérias consolidadas`);
             console.log('Linhas consolidadas:', consolidatedLines);
 
-            // STEP 2: Parse consolidated lines
+            // STEP 2: Parse consolidated lines - SEPARAR POR NÚMERO!
             let processedCount = 0;
 
             consolidatedLines.forEach((line, idx) => {
@@ -3475,7 +3475,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 line = line.trim();
                 if (!line) return;
 
-                // Try to split by : or ;
+                // Split by colon to separate materia from topics
                 let materia, topicosStr;
 
                 if (line.includes(':')) {
@@ -3492,16 +3492,30 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     // Clean subject name (remove leading numbers like "1. ")
                     materia = materia.replace(/^\d+\.\s*/, '');
 
-                    // Parse topics (split by period followed by number: "1. topic1. 2. topic2")
+                    // Parse topics - SEPARAR POR NÚMERO (1, 2, 3, 4.1, etc.)
                     let topicos = [];
                     if (topicosStr) {
-                        // Try numbered format first: "1. topic. 2. topic. 3. topic"
-                        const numberedMatches = topicosStr.match(/\d+\.\s*([^.]+?)(?=\s*\d+\.|$)/g);
-                        if (numberedMatches && numberedMatches.length > 2) {
-                            topicos = numberedMatches.map(t => t.replace(/^\d+\.\s*/, '').trim()).filter(t => t);
-                        } else {
-                            // Fallback to comma/semicolon split
-                            topicos = topicosStr.split(/[,;]/).map(t => t.trim()).filter(t => t);
+                        // REGEX ATUALIZADO: Aceita "1 texto", "1. texto" ou "1.1 texto"
+                        // Captura: 1, 2, 3, 4.1, 5.2, etc. (com ou sem ponto após o número)
+                        const regex = /(\d+(?:\.\d+)?)[.\s]+([^0-9]+?)(?=\s+\d+(?:\.\d+)?[.\s]|$)/g;
+                        let match;
+
+                        while ((match = regex.exec(topicosStr)) !== null) {
+                            const numero = match[1];
+                            let texto = match[2].trim();
+
+                            // Limpar pontuação final se houver (mas manter pontos no meio do texto)
+                            texto = texto.replace(/[.,;:]+$/, '').trim();
+
+                            if (texto && texto.length > 2) {
+                                // Incluir o número no texto do tópico
+                                topicos.push(`${numero}. ${texto}`);
+                            }
+                        }
+
+                        // Se não achou tópicos numerados, tenta por vírgula/ponto-e-vírgula
+                        if (topicos.length === 0) {
+                            topicos = topicosStr.split(/[,;]/).map(t => t.trim()).filter(t => t && t.length > 2);
                         }
                     }
 
@@ -3509,6 +3523,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                         extractedEditalTopics[materia] = topicos;
                         processedCount++;
                         console.log(`✅ ${materia}: ${topicos.length} tópicos`);
+                        console.log('Tópicos:', topicos);
                     }
                 }
             });
@@ -3719,6 +3734,9 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             }
         }
 
+        // Variável global para guardar quais matérias estão expandidas
+        let expandedMaterias = new Set();
+
         function renderMateriasProgress(passadas) {
             const container = document.getElementById('materiasProgressList');
 
@@ -3758,11 +3776,16 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
                 const percentual = pontuacaoMaxima > 0 ? Math.round((pontuacaoAtual / pontuacaoMaxima) * 100) : 0;
 
+                // Verificar se esta matéria está expandida
+                const isExpanded = expandedMaterias.has(materiaId);
+                const displayStyle = isExpanded ? 'block' : 'none';
+                const arrowRotation = isExpanded ? 'rotate(90deg)' : 'rotate(0deg)';
+
                 html += `
                     <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--accent-primary);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: pointer;" onclick="toggleMateriaTopics('${materiaId}')">
                             <h4 style="margin: 0; color: var(--text-primary); font-size: 18px;">
-                                <span id="arrow_${materiaId}" style="display: inline-block; transition: transform 0.3s;">▶</span>
+                                <span id="arrow_${materiaId}" style="display: inline-block; transition: transform 0.3s; transform: ${arrowRotation};">▶</span>
                                 ${materia}
                             </h4>
                             <span style="font-size: 16px; font-weight: 700; color: var(--accent-primary);">${percentual}%</span>
@@ -3782,7 +3805,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                         </div>
 
                         <!-- Lista de Tópicos (Expandível) -->
-                        <div id="topics_${materiaId}" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 2px solid var(--border);">
+                        <div id="topics_${materiaId}" style="display: ${displayStyle}; margin-top: 15px; padding-top: 15px; border-top: 2px solid var(--border);">
                 `;
 
                 // Renderizar tópicos inline
@@ -3831,10 +3854,18 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
         }
 
         function toggleMateriaTopics(materiaId) {
+            // Adicionar ou remover do Set de matérias expandidas
+            if (expandedMaterias.has(materiaId)) {
+                expandedMaterias.delete(materiaId);
+            } else {
+                expandedMaterias.add(materiaId);
+            }
+
+            // Atualizar visualmente sem reconstruir tudo
             const topicsDiv = document.getElementById(`topics_${materiaId}`);
             const arrow = document.getElementById(`arrow_${materiaId}`);
 
-            if (topicsDiv.style.display === 'none') {
+            if (expandedMaterias.has(materiaId)) {
                 topicsDiv.style.display = 'block';
                 arrow.style.transform = 'rotate(90deg)';
             } else {

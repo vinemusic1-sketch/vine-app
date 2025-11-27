@@ -4035,6 +4035,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
         // Mostrar certificado animado de bravura e conclusão
         function mostrarCertificadoBravura() {
             const certificado = document.createElement('div');
+            certificado.id = 'certificadoBravura';
             certificado.style.cssText = `
                 position: fixed;
                 top: 0;
@@ -4081,7 +4082,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                         <div style="font-size: 60px; margin: 20px 0; animation: estrelas 2s ease-in-out infinite;">
                             ⭐ ⭐ ⭐
                         </div>
-                        <button onclick="this.closest('div').parentElement.remove()" style="
+                        <button onclick="document.getElementById('certificadoBravura').remove()" style="
                             padding: 15px 40px;
                             background: #8B4513;
                             color: white;

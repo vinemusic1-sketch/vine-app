@@ -894,20 +894,20 @@
                         style="min-height: 300px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
                     ></textarea>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
-                        💡 <strong>Dica:</strong> Cole o texto sem se preocupar com formatação. A IA irá identificar automaticamente: disciplinas, tópicos, data da prova e todas as informações relevantes!
+                        💡 <strong>Dica:</strong> Cole o texto sem se preocupar com formatação. O sistema irá identificar automaticamente: disciplinas, tópicos, data da prova e todas as informações relevantes!
                     </div>
                 </div>
 
                 <button class="btn" id="btnAnalisarEdital" style="font-size: 18px; padding: 15px 30px;">
-                    🚀 Analisar Edital com IA
+                    🚀 Analisar Edital
                 </button>
 
                 <!-- Loading State -->
                 <div id="cronoLoadingAnalise" style="display: none; margin-top: 20px; text-align: center;">
                     <div class="loading-spinner"></div>
                     <p style="color: var(--text-secondary); margin-top: 15px;">
-                        🔍 Analisando edital com IA...<br>
-                        <span style="font-size: 13px;">Extraindo disciplinas, tópicos e buscando relevância...</span>
+                        <span style="font-size: 15px;">Analisando edital...</span><br>
+                        <span style="font-size: 13px;" id="cronoLoadingSubtext">Extraindo disciplinas e tópicos</span>
                     </p>
                 </div>
 
@@ -3218,8 +3218,11 @@ Por favor, organize sua resposta de forma clara, destacando:
             document.getElementById('cronoLoadingAnalise').style.display = 'block';
             document.getElementById('cronoRaioX').style.display = 'none';
 
-            // Chamar IA para análise
+            // Tentar análise com Poe primeiro, fallback para offline
             if (window.Poe) {
+                document.getElementById('cronoLoadingSubtext').textContent = 'Processando com análise avançada...';
+
+                // Chamar IA para análise
                 const prompt = `Você é um especialista em concursos públicos brasileiros. Analise o edital abaixo e forneça um JSON estruturado com TODAS as informações.
 
 🎯 CARGO: ${cargo}
@@ -3258,13 +3261,253 @@ INSTRUÇÕES:
                         openChat: false
                     });
                 } catch (err) {
-                    document.getElementById('cronoLoadingAnalise').style.display = 'none';
-                    showNotification(`❌ Erro: ${err.message || err}`);
+                    // Fallback para análise offline
+                    console.log('Poe API falhou, usando análise offline robusta');
+                    document.getElementById('cronoLoadingSubtext').textContent = 'Processando localmente...';
+                    setTimeout(() => analisarEditalOffline(cargo, editalBruto, dominioBase), 500);
                 }
             } else {
-                document.getElementById('cronoLoadingAnalise').style.display = 'none';
-                showNotification('⚠️ Poe API não disponível. Certifique-se de estar usando o app na plataforma Poe.');
+                // Análise offline direta (sem Poe)
+                document.getElementById('cronoLoadingSubtext').textContent = 'Processando localmente...';
+                setTimeout(() => analisarEditalOffline(cargo, editalBruto, dominioBase), 500);
             }
+        }
+
+        // ==================== ANÁLISE OFFLINE ROBUSTA ====================
+        // Parser inteligente que funciona 100% offline
+        function analisarEditalOffline(cargo, editalBruto, dominioBase) {
+            try {
+                // 1. DETECTAR DATA DA PROVA
+                const dataProva = extrairDataProva(editalBruto);
+
+                // 2. EXTRAIR DISCIPLINAS E TÓPICOS
+                const disciplinas = extrairDisciplinasTopicos(editalBruto, cargo, dominioBase);
+
+                // 3. SALVAR DADOS
+                cronogramaData.dataProva = dataProva;
+                cronogramaData.disciplinas = disciplinas;
+
+                // 4. CALCULAR DISTRIBUIÇÃO
+                calcularDistribuicaoHoras();
+
+                // 5. EXIBIR RAIO-X
+                exibirRaioX();
+
+                // 6. ESCONDER LOADING
+                document.getElementById('cronoLoadingAnalise').style.display = 'none';
+
+                // 7. AVANÇAR PARA ETAPA 2
+                gerarCiclosSemanais();
+
+                showNotification('✅ Edital analisado com sucesso!');
+
+            } catch (err) {
+                console.error('Erro na análise offline:', err);
+                document.getElementById('cronoLoadingAnalise').style.display = 'none';
+                showNotification('❌ Erro ao analisar edital. Verifique o formato do texto.');
+            }
+        }
+
+        // Extrai data da prova do texto
+        function extrairDataProva(texto) {
+            // Padrões de data comuns em editais
+            const padroes = [
+                /prova.*?(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i,
+                /data.*?prova.*?(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i,
+                /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4}).*?prova/i,
+                /aplica[çc][ãa]o.*?(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i,
+            ];
+
+            for (const padrao of padroes) {
+                const match = texto.match(padrao);
+                if (match) {
+                    const dia = match[1].padStart(2, '0');
+                    const mes = match[2].padStart(2, '0');
+                    const ano = match[3];
+                    return `${ano}-${mes}-${dia}`;
+                }
+            }
+
+            // Padrão "DD de MMMM de YYYY"
+            const meses = {
+                'janeiro': '01', 'fevereiro': '02', 'março': '03', 'marco': '03',
+                'abril': '04', 'maio': '05', 'junho': '06',
+                'julho': '07', 'agosto': '08', 'setembro': '09',
+                'outubro': '10', 'novembro': '11', 'dezembro': '12'
+            };
+
+            const padraoExtenso = /(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})/i;
+            const matchExtenso = texto.match(padraoExtenso);
+            if (matchExtenso) {
+                const dia = matchExtenso[1].padStart(2, '0');
+                const mesNome = matchExtenso[2].toLowerCase();
+                const ano = matchExtenso[3];
+                const mes = meses[mesNome];
+                if (mes) {
+                    return `${ano}-${mes}-${dia}`;
+                }
+            }
+
+            // Não encontrou - usar 90 dias no futuro
+            const dataFutura = new Date();
+            dataFutura.setDate(dataFutura.getDate() + 90);
+            return dataFutura.toISOString().split('T')[0];
+        }
+
+        // Extrai disciplinas e tópicos do edital
+        function extrairDisciplinasTopicos(texto, cargo, dominioBase) {
+            const disciplinas = [];
+
+            // Base de conhecimento de disciplinas comuns
+            const disciplinasConhecidas = {
+                // Direito
+                'direito constitucional': { keywords: ['constitucional', 'constituição'], complexidade: 7 },
+                'direito administrativo': { keywords: ['administrativo', 'ato administrativo', 'licitação'], complexidade: 8 },
+                'direito civil': { keywords: ['civil', 'código civil', 'contratos'], complexidade: 7 },
+                'direito penal': { keywords: ['penal', 'código penal', 'crimes'], complexidade: 8 },
+                'direito processual civil': { keywords: ['processual civil', 'processo civil', 'cpc'], complexidade: 9 },
+                'direito processual penal': { keywords: ['processual penal', 'processo penal', 'cpp'], complexidade: 9 },
+                'direito do trabalho': { keywords: ['trabalho', 'clt', 'trabalhista'], complexidade: 7 },
+                'direito tributário': { keywords: ['tributário', 'tributos', 'impostos'], complexidade: 8 },
+                'direito previdenciário': { keywords: ['previdenciário', 'previdência', 'inss'], complexidade: 7 },
+
+                // Conhecimentos Gerais
+                'português': { keywords: ['português', 'língua portuguesa', 'gramática'], complexidade: 6 },
+                'inglês': { keywords: ['inglês', 'língua inglesa', 'english'], complexidade: 5 },
+                'matemática': { keywords: ['matemática', 'cálculo'], complexidade: 7 },
+                'raciocínio lógico': { keywords: ['raciocínio lógico', 'lógica'], complexidade: 7 },
+                'informática': { keywords: ['informática', 'computação', 'software'], complexidade: 5 },
+                'atualidades': { keywords: ['atualidades', 'conhecimentos gerais'], complexidade: 4 },
+
+                // Específicas
+                'contabilidade': { keywords: ['contabilidade', 'contábil'], complexidade: 8 },
+                'economia': { keywords: ['economia', 'econômico'], complexidade: 7 },
+                'administração': { keywords: ['administração', 'gestão'], complexidade: 6 },
+                'estatística': { keywords: ['estatística', 'probabilidade'], complexidade: 8 },
+                'arquivologia': { keywords: ['arquivologia', 'arquivo'], complexidade: 6 },
+            };
+
+            // Detectar incidência baseada no cargo
+            function calcularIncidencia(disciplina, cargo) {
+                const cargoLower = cargo.toLowerCase();
+
+                // Regras de incidência por tipo de cargo
+                if (cargoLower.includes('tribunal') || cargoLower.includes('judiciário') || cargoLower.includes('analista judiciário')) {
+                    if (disciplina.includes('processual')) return 10;
+                    if (disciplina.includes('constitucional')) return 9;
+                    if (disciplina.includes('administrativo')) return 9;
+                    if (disciplina.includes('penal') || disciplina.includes('civil')) return 8;
+                }
+
+                if (cargoLower.includes('fiscal') || cargoLower.includes('auditor')) {
+                    if (disciplina.includes('tributário')) return 10;
+                    if (disciplina.includes('contabilidade')) return 10;
+                    if (disciplina.includes('administrativo')) return 8;
+                }
+
+                if (cargoLower.includes('técnico')) {
+                    if (disciplina.includes('português')) return 9;
+                    if (disciplina.includes('informática')) return 8;
+                    if (disciplina.includes('matemática')) return 7;
+                }
+
+                // Incidência padrão
+                if (disciplina.includes('português')) return 9;
+                if (disciplina.includes('constitucional')) return 8;
+                if (disciplina.includes('administrativo')) return 8;
+
+                return 6; // Padrão
+            }
+
+            // Tentar identificar seções de disciplinas
+            const linhas = texto.split('\n');
+            let disciplinaAtual = null;
+            let topicosAtuais = [];
+
+            for (let i = 0; i < linhas.length; i++) {
+                const linha = linhas[i].trim();
+                if (!linha) continue;
+
+                // Detectar início de disciplina (padrões comuns)
+                let isDisciplina = false;
+                let nomeDisciplina = '';
+
+                // Padrão: "DISCIPLINA:" ou "1. DISCIPLINA" ou "CONHECIMENTOS DE:"
+                for (const [nome, info] of Object.entries(disciplinasConhecidas)) {
+                    for (const keyword of info.keywords) {
+                        if (linha.toLowerCase().includes(keyword) &&
+                            (linha.length < 100 || linha.match(/^[\d\.\)]+\s*[A-Z]/))) {
+                            isDisciplina = true;
+                            nomeDisciplina = nome.charAt(0).toUpperCase() + nome.slice(1);
+                            break;
+                        }
+                    }
+                    if (isDisciplina) break;
+                }
+
+                if (isDisciplina) {
+                    // Salvar disciplina anterior
+                    if (disciplinaAtual && topicosAtuais.length > 0) {
+                        const info = disciplinasConhecidas[disciplinaAtual.toLowerCase()] || {};
+                        disciplinas.push({
+                            nome: disciplinaAtual,
+                            topicos: [...topicosAtuais],
+                            volume: Math.min(10, Math.max(3, Math.ceil(topicosAtuais.length / 3))),
+                            incidencia: calcularIncidencia(disciplinaAtual, cargo),
+                            complexidade: info.complexidade || 6,
+                            dominioAluno: dominioBase,
+                            justificativa: `Disciplina identificada no edital para ${cargo}`
+                        });
+                    }
+
+                    // Iniciar nova disciplina
+                    disciplinaAtual = nomeDisciplina;
+                    topicosAtuais = [];
+                } else if (disciplinaAtual) {
+                    // Adicionar como tópico
+                    const topicoLimpo = linha.replace(/^[\d\.\)]+\s*/, '').trim();
+                    if (topicoLimpo.length > 5 && topicoLimpo.length < 200) {
+                        topicosAtuais.push(topicoLimpo);
+                    }
+                }
+            }
+
+            // Salvar última disciplina
+            if (disciplinaAtual && topicosAtuais.length > 0) {
+                const info = disciplinasConhecidas[disciplinaAtual.toLowerCase()] || {};
+                disciplinas.push({
+                    nome: disciplinaAtual,
+                    topicos: [...topicosAtuais],
+                    volume: Math.min(10, Math.max(3, Math.ceil(topicosAtuais.length / 3))),
+                    incidencia: calcularIncidencia(disciplinaAtual, cargo),
+                    complexidade: info.complexidade || 6,
+                    dominioAluno: dominioBase,
+                    justificativa: `Disciplina identificada no edital para ${cargo}`
+                });
+            }
+
+            // Se não encontrou nenhuma disciplina, tentar método alternativo
+            if (disciplinas.length === 0) {
+                // Usar todas as disciplinas conhecidas que aparecem no texto
+                for (const [nome, info] of Object.entries(disciplinasConhecidas)) {
+                    for (const keyword of info.keywords) {
+                        if (texto.toLowerCase().includes(keyword)) {
+                            disciplinas.push({
+                                nome: nome.charAt(0).toUpperCase() + nome.slice(1),
+                                topicos: ['Conforme conteúdo programático do edital'],
+                                volume: 5,
+                                incidencia: calcularIncidencia(nome, cargo),
+                                complexidade: info.complexidade || 6,
+                                dominioAluno: dominioBase,
+                                justificativa: `Disciplina identificada no edital para ${cargo}`
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return disciplinas;
         }
 
         // Processa o JSON retornado pela IA

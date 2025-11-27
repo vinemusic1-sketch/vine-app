@@ -3797,60 +3797,50 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
             let html = `
                 <div style="background: var(--bg-secondary); padding: 25px; border-radius: 16px;">
-                    <h3 style="color: var(--accent-primary); margin-bottom: 15px;">📚 ${materia}</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
-                        💡 Clique nos botões para marcar suas passadas em cada tópico:
+                    <h3 style="color: var(--accent-primary); margin-bottom: 10px;">📚 ${materia.toUpperCase()}</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 13px;">
+                        💡 Clique nas caixas para marcar suas passadas em cada tópico:
                     </p>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                    <!-- Lista de Tópicos -->
+                    <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px; border: 2px solid var(--accent-primary);">
             `;
 
             topicos.forEach((topico, idx) => {
                 const currentPassada = passadas[materia][topico] || 0;
-
-                // Definir cores e estilos baseados na passada
-                let bgColor = 'var(--bg-tertiary)';
-                let borderColor = 'transparent';
-                let opacity = '1';
-
-                if (currentPassada === 1) {
-                    bgColor = 'rgba(255, 193, 7, 0.15)'; // Amarelo claro
-                    borderColor = '#ffc107';
-                } else if (currentPassada === 2) {
-                    bgColor = 'rgba(33, 150, 243, 0.15)'; // Azul claro
-                    borderColor = '#2196F3';
-                } else if (currentPassada === 3) {
-                    bgColor = 'rgba(76, 175, 80, 0.15)'; // Verde claro
-                    borderColor = '#4CAF50';
-                    opacity = '0.8';
-                }
+                const p1Checked = currentPassada >= 1;
+                const p2Checked = currentPassada >= 2;
+                const p3Checked = currentPassada >= 3;
 
                 html += `
-                    <div style="background: ${bgColor}; border: 2px solid ${borderColor}; padding: 15px; border-radius: 12px; opacity: ${opacity}; transition: all 0.3s;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="flex: 1; color: var(--text-primary); font-size: 15px; font-weight: 500;">${idx + 1}. ${topico}</span>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button onclick="marcarPassada('${materia}', '${topico.replace(/'/g, "\\'")}', 1)"
-                                    style="flex: 1; padding: 10px; background: ${currentPassada >= 1 ? '#ffc107' : 'var(--bg-secondary)'};
-                                           color: ${currentPassada >= 1 ? 'white' : 'var(--text-secondary)'};
-                                           border: 2px solid ${currentPassada >= 1 ? '#ffc107' : 'var(--border)'};
-                                           border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">
-                                ${currentPassada >= 1 ? '✓' : ''} 1ª Passada
-                            </button>
-                            <button onclick="marcarPassada('${materia}', '${topico.replace(/'/g, "\\'")}', 2)"
-                                    style="flex: 1; padding: 10px; background: ${currentPassada >= 2 ? '#2196F3' : 'var(--bg-secondary)'};
-                                           color: ${currentPassada >= 2 ? 'white' : 'var(--text-secondary)'};
-                                           border: 2px solid ${currentPassada >= 2 ? '#2196F3' : 'var(--border)'};
-                                           border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">
-                                ${currentPassada >= 2 ? '✓' : ''} 2ª Passada
-                            </button>
-                            <button onclick="marcarPassada('${materia}', '${topico.replace(/'/g, "\\'")}', 3)"
-                                    style="flex: 1; padding: 10px; background: ${currentPassada >= 3 ? '#4CAF50' : 'var(--bg-secondary)'};
-                                           color: ${currentPassada >= 3 ? 'white' : 'var(--text-secondary)'};
-                                           border: 2px solid ${currentPassada >= 3 ? '#4CAF50' : 'var(--border)'};
-                                           border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;">
-                                ${currentPassada >= 3 ? '✓' : ''} 3ª Passada
-                            </button>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+                        <!-- Número e Tópico -->
+                        <span style="flex: 1; color: var(--text-primary); font-size: 14px; line-height: 1.5;">
+                            <strong>${idx + 1}.</strong> ${topico}
+                        </span>
+
+                        <!-- Checkboxes das Passadas -->
+                        <div style="display: flex; gap: 15px; align-items: center; flex-shrink: 0;">
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-secondary); font-size: 13px;">
+                                <input type="checkbox" ${p1Checked ? 'checked' : ''}
+                                       onchange="togglePassadaCheckbox('${materia}', '${topico.replace(/'/g, "\\'")}', 1, this.checked)"
+                                       style="width: 18px; height: 18px; cursor: pointer; accent-color: #ffc107;">
+                                <span style="color: #ffc107; font-weight: 600;">1ª</span>
+                            </label>
+
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-secondary); font-size: 13px;">
+                                <input type="checkbox" ${p2Checked ? 'checked' : ''}
+                                       onchange="togglePassadaCheckbox('${materia}', '${topico.replace(/'/g, "\\'")}', 2, this.checked)"
+                                       style="width: 18px; height: 18px; cursor: pointer; accent-color: #2196F3;">
+                                <span style="color: #2196F3; font-weight: 600;">2ª</span>
+                            </label>
+
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-secondary); font-size: 13px;">
+                                <input type="checkbox" ${p3Checked ? 'checked' : ''}
+                                       onchange="togglePassadaCheckbox('${materia}', '${topico.replace(/'/g, "\\'")}', 3, this.checked)"
+                                       style="width: 18px; height: 18px; cursor: pointer; accent-color: #4CAF50;">
+                                <span style="color: #4CAF50; font-weight: 600;">3ª</span>
+                            </label>
                         </div>
                     </div>
                 `;
@@ -3859,7 +3849,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             html += `
                     </div>
                     <button onclick="updateDashboard(); document.getElementById('topicsModal').remove();"
-                            style="margin-top: 20px; width: 100%; padding: 12px; background: var(--accent-primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px;">
+                            style="margin-top: 20px; width: 100%; padding: 14px; background: var(--accent-primary); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 16px;">
                         ✅ Fechar e Atualizar
                     </button>
                 </div>
@@ -3869,33 +3859,37 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             const modal = document.createElement('div');
             modal.id = 'topicsModal';
             modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;';
-            modal.innerHTML = `<div style="max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto;">${html}</div>`;
+            modal.innerHTML = `<div style="max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto;">${html}</div>`;
             document.body.appendChild(modal);
         }
 
-        function marcarPassada(materia, topico, passada) {
+        function togglePassadaCheckbox(materia, topico, passada, isChecked) {
             const passadas = Storage.get('topicPassadas', {});
 
             if (!passadas[materia]) {
                 passadas[materia] = {};
             }
 
-            // Se clicar na mesma passada, desmarca. Senão, marca a nova passada
-            if (passadas[materia][topico] === passada) {
-                passadas[materia][topico] = passada - 1;
-                if (passadas[materia][topico] === 0) {
-                    delete passadas[materia][topico];
-                }
-                showNotification(`↩️ ${passada}ª passada desmarcada!`);
-            } else {
+            const currentPassada = passadas[materia][topico] || 0;
+
+            if (isChecked) {
+                // Marcar esta passada (e todas anteriores)
                 passadas[materia][topico] = passada;
                 const emoji = passada === 1 ? '📖' : passada === 2 ? '🔄' : '✅';
                 showNotification(`${emoji} ${passada}ª passada marcada!`);
+            } else {
+                // Desmarcar esta passada (e todas posteriores)
+                if (passada === 1) {
+                    delete passadas[materia][topico];
+                } else {
+                    passadas[materia][topico] = passada - 1;
+                }
+                showNotification(`↩️ ${passada}ª passada desmarcada!`);
             }
 
             Storage.set('topicPassadas', passadas);
 
-            // Reabrir o modal para atualizar visualmente
+            // Reabrir modal para atualizar visual
             document.getElementById('topicsModal').remove();
             showTopicsForMateria(materia);
         }

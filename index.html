@@ -608,6 +608,9 @@
             }
         }
     </style>
+
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -751,6 +754,29 @@
                         <div style="font-size: 48px; margin-bottom: 10px;" id="trofeuGeralEmoji">🏆</div>
                         <div style="font-size: 16px; font-weight: 700; color: white; margin-bottom: 5px;" id="trofeuGeralNome">Troféu</div>
                         <div style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 500;">Conquista Desbloqueada!</div>
+                    </div>
+                </div>
+
+                <!-- Gráficos Visuais -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <!-- Gráfico de Pizza - Distribuição por Disciplina -->
+                    <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 16px; border: 2px solid var(--border);">
+                        <h3 style="margin-bottom: 20px; color: var(--text-primary); font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                            📊 Distribuição por Disciplina
+                        </h3>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chartPizza"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Linha - Progresso ao Longo do Tempo -->
+                    <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 16px; border: 2px solid var(--border);">
+                        <h3 style="margin-bottom: 20px; color: var(--text-primary); font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                            📈 Evolução do Progresso
+                        </h3>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="chartLinha"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -3838,6 +3864,10 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
             // Update progress bars per materia
             renderMateriasProgress(passadas);
+
+            // Update gráficos visuais
+            atualizarGraficoPizza();
+            atualizarGraficoLinha();
         }
 
         function updateExamCountdown() {
@@ -3895,6 +3925,247 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         // Variável global para guardar quais matérias estão expandidas
         let expandedMaterias = new Set();
+
+        // Variáveis globais para os gráficos
+        let chartPizzaInstance = null;
+        let chartLinhaInstance = null;
+
+        // Função para atualizar gráfico de pizza (distribuição por disciplina)
+        function atualizarGraficoPizza() {
+            const passadas = Storage.get('topicPassadas', {});
+            const materias = Object.keys(extractedEditalTopics);
+
+            if (materias.length === 0) {
+                // Se não há matérias, destruir gráfico se existir
+                if (chartPizzaInstance) {
+                    chartPizzaInstance.destroy();
+                    chartPizzaInstance = null;
+                }
+                return;
+            }
+
+            // Calcular dados para cada matéria
+            const labels = [];
+            const data = [];
+            const backgroundColor = [
+                '#FFE66D', '#A8E6CF', '#FFB6D9', '#B4D7FF', '#D4A5FF',
+                '#FFD4A3', '#C2F0C2', '#FFB3BA', '#BAE1FF', '#E0BBE4'
+            ];
+
+            materias.forEach(materia => {
+                const topicos = extractedEditalTopics[materia] || [];
+                labels.push(materia);
+                data.push(topicos.length);
+            });
+
+            const ctx = document.getElementById('chartPizza');
+            if (!ctx) return;
+
+            // Destruir gráfico anterior se existir
+            if (chartPizzaInstance) {
+                chartPizzaInstance.destroy();
+            }
+
+            // Criar novo gráfico
+            chartPizzaInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: getComputedStyle(document.body).getPropertyValue('--bg-primary')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: getComputedStyle(document.body).getPropertyValue('--text-primary'),
+                                padding: 15,
+                                font: {
+                                    size: 11
+                                },
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const value = data.datasets[0].data[i];
+                                            return {
+                                                text: `${label}: ${value} tópicos`,
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} tópicos (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para atualizar gráfico de linha (evolução do progresso)
+        function atualizarGraficoLinha() {
+            const historicoProgresso = Storage.get('historicoProgresso', []);
+
+            // Preparar dados
+            const labels = [];
+            const data = [];
+
+            if (historicoProgresso.length === 0) {
+                // Se não há histórico, adicionar ponto atual
+                registrarProgressoHoje();
+                return; // Será chamado novamente após registrar
+            }
+
+            // Ordenar por data
+            historicoProgresso.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            // Pegar últimos 30 dias
+            const ultimos30 = historicoProgresso.slice(-30);
+
+            ultimos30.forEach(registro => {
+                const data_obj = new Date(registro.data);
+                const dia = data_obj.getDate().toString().padStart(2, '0');
+                const mes = (data_obj.getMonth() + 1).toString().padStart(2, '0');
+                labels.push(`${dia}/${mes}`);
+                data.push(registro.percentual);
+            });
+
+            const ctx = document.getElementById('chartLinha');
+            if (!ctx) return;
+
+            // Destruir gráfico anterior se existir
+            if (chartLinhaInstance) {
+                chartLinhaInstance.destroy();
+            }
+
+            // Criar novo gráfico
+            chartLinhaInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Progresso (%)',
+                        data: data,
+                        borderColor: getComputedStyle(document.body).getPropertyValue('--accent-primary'),
+                        backgroundColor: getComputedStyle(document.body).getPropertyValue('--accent-primary') + '20',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: getComputedStyle(document.body).getPropertyValue('--accent-primary'),
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: getComputedStyle(document.body).getPropertyValue('--text-secondary'),
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: {
+                                color: getComputedStyle(document.body).getPropertyValue('--border')
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: getComputedStyle(document.body).getPropertyValue('--text-secondary'),
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                color: getComputedStyle(document.body).getPropertyValue('--border')
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Progresso: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para registrar progresso do dia (chamada ao atualizar dashboard)
+        function registrarProgressoHoje() {
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0); // Zerar horas para comparar apenas a data
+
+            const historicoProgresso = Storage.get('historicoProgresso', []);
+
+            // Verificar se já tem registro de hoje
+            const jaRegistrouHoje = historicoProgresso.some(registro => {
+                const dataRegistro = new Date(registro.data);
+                dataRegistro.setHours(0, 0, 0, 0);
+                return dataRegistro.getTime() === hoje.getTime();
+            });
+
+            if (!jaRegistrouHoje) {
+                // Calcular progresso atual
+                const passadas = Storage.get('topicPassadas', {});
+                let totalTopicos = 0;
+                let topicosComPassada = 0;
+
+                Object.keys(extractedEditalTopics).forEach(materia => {
+                    const topicos = extractedEditalTopics[materia] || [];
+                    totalTopicos += topicos.length;
+
+                    topicos.forEach(topico => {
+                        const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
+                        if (numPassadas >= 1) {
+                            topicosComPassada++;
+                        }
+                    });
+                });
+
+                const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
+
+                // Adicionar registro
+                historicoProgresso.push({
+                    data: hoje.toISOString(),
+                    percentual: percentual
+                });
+
+                Storage.set('historicoProgresso', historicoProgresso);
+            }
+        }
 
         // Sistema de troféus/medalhas - MEDALHA POR PASSADA INDEPENDENTE
         // REGRA CORRETA: Cada passada (1ª, 2ª, 3ª) ganha sua própria medalha baseada no progresso:

@@ -1085,6 +1085,12 @@
                     </div>
                 </div>
 
+                <!-- HISTÓRICO DE MEDALHAS CONQUISTADAS -->
+                <div id="medalhasHistoricoSection" style="margin-top: 40px; display: none;">
+                    <h3 style="margin-bottom: 20px; color: var(--text-primary);">🏆 Histórico de Medalhas Conquistadas</h3>
+                    <div id="medalhasHistoricoContent"></div>
+                </div>
+
                 <button class="btn btn-danger" id="clearData" style="margin-top: 20px;">🗑️ Limpar Todos os Dados</button>
             </div>
         </div>
@@ -1939,8 +1945,8 @@
             dialogBox.style.cssText = `
                 background: var(--bg-secondary);
                 border-radius: 16px;
-                max-width: 600px;
-                width: 90%;
+                max-width: 650px;
+                width: 92%;
                 max-height: 80vh;
                 overflow: hidden;
                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -3775,29 +3781,51 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             document.getElementById('percentualProgresso').textContent = percentual + '%';
 
             // Update troféu geral
-            // Atualizar card de medalhas (somatório total)
+            // Atualizar card de medalhas (somatório total e troféu geral)
             const medalhasAtuais = Storage.get('medalhasConquistadas', {});
-            let totalOuro = 0, totalPrata = 0, totalBronze = 0;
+            let totalOuro = 0, totalPrata = 0, totalBronze = 0, totalEstrela = 0;
+
             Object.values(medalhasAtuais).forEach(materiaMedalhas => {
                 materiaMedalhas.forEach(m => {
-                    if (m.tipo === '1ª') totalOuro++;
-                    if (m.tipo === '2ª') totalPrata++;
-                    if (m.tipo === '3ª') totalBronze++;
+                    if (m.nivel === 'ouro') totalOuro++;
+                    if (m.nivel === 'prata') totalPrata++;
+                    if (m.nivel === 'bronze') totalBronze++;
+                    if (m.nivel === 'estrela') totalEstrela++;
                 });
             });
 
             const trofeuCard = document.getElementById('trofeuGeral');
-            const totalMedalhas = totalOuro + totalPrata + totalBronze;
+            const totalMedalhas = totalOuro + totalPrata + totalBronze + totalEstrela;
 
             if (totalMedalhas > 0) {
-                let medalhasHtml = '<div style="display: flex; gap: 8px; justify-content: center; align-items: center;">';
-                if (totalOuro > 0) medalhasHtml += `<div style="font-size: 36px;">🥇<span style="font-size: 16px; font-weight: 700; color: white; margin-left: 4px;">×${totalOuro}</span></div>`;
-                if (totalPrata > 0) medalhasHtml += `<div style="font-size: 36px;">🥈<span style="font-size: 16px; font-weight: 700; color: white; margin-left: 4px;">×${totalPrata}</span></div>`;
-                if (totalBronze > 0) medalhasHtml += `<div style="font-size: 36px;">🥉<span style="font-size: 16px; font-weight: 700; color: white; margin-left: 4px;">×${totalBronze}</span></div>`;
+                // Determinar troféu geral baseado na predominância
+                let trofeuGeral = '🏆';
+                let nivelTrofeu = 'Bronze';
+
+                if (totalOuro >= totalPrata && totalOuro >= totalBronze && totalOuro >= totalEstrela && totalOuro > 0) {
+                    trofeuGeral = '🏆';
+                    nivelTrofeu = 'Ouro';
+                } else if (totalPrata >= totalBronze && totalPrata >= totalEstrela && totalPrata > 0) {
+                    trofeuGeral = '🥈';
+                    nivelTrofeu = 'Prata';
+                } else if (totalBronze >= totalEstrela && totalBronze > 0) {
+                    trofeuGeral = '🥉';
+                    nivelTrofeu = 'Bronze';
+                } else if (totalEstrela > 0) {
+                    trofeuGeral = '⭐';
+                    nivelTrofeu = 'Estrela';
+                }
+
+                let medalhasHtml = `<div style="font-size: 48px; margin-bottom: 5px;">${trofeuGeral}</div>`;
+                medalhasHtml += '<div style="display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap;">';
+                if (totalOuro > 0) medalhasHtml += `<div style="font-size: 24px;">🥇<span style="font-size: 14px; font-weight: 700; color: white; margin-left: 4px;">×${totalOuro}</span></div>`;
+                if (totalPrata > 0) medalhasHtml += `<div style="font-size: 24px;">🥈<span style="font-size: 14px; font-weight: 700; color: white; margin-left: 4px;">×${totalPrata}</span></div>`;
+                if (totalBronze > 0) medalhasHtml += `<div style="font-size: 24px;">🥉<span style="font-size: 14px; font-weight: 700; color: white; margin-left: 4px;">×${totalBronze}</span></div>`;
+                if (totalEstrela > 0) medalhasHtml += `<div style="font-size: 24px;">⭐<span style="font-size: 14px; font-weight: 700; color: white; margin-left: 4px;">×${totalEstrela}</span></div>`;
                 medalhasHtml += '</div>';
 
                 document.getElementById('trofeuGeralEmoji').innerHTML = medalhasHtml;
-                document.getElementById('trofeuGeralNome').textContent = `${totalMedalhas} Conquista${totalMedalhas > 1 ? 's' : ''}`;
+                document.getElementById('trofeuGeralNome').textContent = `Troféu ${nivelTrofeu}`;
                 trofeuCard.style.display = 'block';
                 trofeuCard.style.cursor = 'pointer';
                 trofeuCard.onclick = () => mostrarHistoricoConquistas();
@@ -3868,7 +3896,13 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
         // Variável global para guardar quais matérias estão expandidas
         let expandedMaterias = new Set();
 
-        // Sistema de troféus/medalhas - UMA MEDALHA POR PASSADA COMPLETA
+        // Sistema de troféus/medalhas - MEDALHA POR PASSADA INDEPENDENTE
+        // REGRA CORRETA: Cada passada (1ª, 2ª, 3ª) ganha sua própria medalha baseada no progresso:
+        // - 0-19%: Sem medalha
+        // - 20-29%: ⭐ Estrela
+        // - 30-49%: 🥉 Bronze
+        // - 50-99%: 🥈 Prata
+        // - 100%: 🥇 Ouro
         function getMedalhas(materia, passadas) {
             const topicos = extractedEditalTopics[materia] || [];
             const totalTopicos = topicos.length;
@@ -3876,35 +3910,58 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             if (totalTopicos === 0) return [];
 
             let medalhas = [];
-            let passada1Complete = 0, passada2Complete = 0, passada3Complete = 0;
+            let passada1Count = 0, passada2Count = 0, passada3Count = 0;
 
-            // Contar passadas completas
+            // Contar quantos tópicos têm cada passada
             topicos.forEach(topico => {
                 const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
-                if (numPassadas >= 1) passada1Complete++;
-                if (numPassadas >= 2) passada2Complete++;
-                if (numPassadas >= 3) passada3Complete++;
+                if (numPassadas >= 1) passada1Count++;
+                if (numPassadas >= 2) passada2Count++;
+                if (numPassadas >= 3) passada3Count++;
             });
 
-            // 1ª passada completa = 🥇 Ouro
-            if (passada1Complete === totalTopicos) {
-                medalhas.push({ emoji: '🥇', nome: 'Ouro - 1ª Passada Completa', tipo: '1ª' });
+            // Calcular percentuais
+            const perc1 = (passada1Count / totalTopicos) * 100;
+            const perc2 = (passada2Count / totalTopicos) * 100;
+            const perc3 = (passada3Count / totalTopicos) * 100;
+
+            // MEDALHA DA 1ª PASSADA
+            if (perc1 === 100) {
+                medalhas.push({ emoji: '🥇', nome: 'Ouro - 1ª Passada', tipo: '1ª', nivel: 'ouro', progresso: 100 });
+            } else if (perc1 >= 50) {
+                medalhas.push({ emoji: '🥈', nome: 'Prata - 1ª Passada', tipo: '1ª', nivel: 'prata', progresso: Math.round(perc1) });
+            } else if (perc1 >= 30) {
+                medalhas.push({ emoji: '🥉', nome: 'Bronze - 1ª Passada', tipo: '1ª', nivel: 'bronze', progresso: Math.round(perc1) });
+            } else if (perc1 >= 20) {
+                medalhas.push({ emoji: '⭐', nome: 'Estrela - 1ª Passada', tipo: '1ª', nivel: 'estrela', progresso: Math.round(perc1) });
             }
 
-            // 2ª passada completa = 🥈 Prata
-            if (passada2Complete === totalTopicos) {
-                medalhas.push({ emoji: '🥈', nome: 'Prata - 2ª Passada Completa', tipo: '2ª' });
+            // MEDALHA DA 2ª PASSADA
+            if (perc2 === 100) {
+                medalhas.push({ emoji: '🥇', nome: 'Ouro - 2ª Passada', tipo: '2ª', nivel: 'ouro', progresso: 100 });
+            } else if (perc2 >= 50) {
+                medalhas.push({ emoji: '🥈', nome: 'Prata - 2ª Passada', tipo: '2ª', nivel: 'prata', progresso: Math.round(perc2) });
+            } else if (perc2 >= 30) {
+                medalhas.push({ emoji: '🥉', nome: 'Bronze - 2ª Passada', tipo: '2ª', nivel: 'bronze', progresso: Math.round(perc2) });
+            } else if (perc2 >= 20) {
+                medalhas.push({ emoji: '⭐', nome: 'Estrela - 2ª Passada', tipo: '2ª', nivel: 'estrela', progresso: Math.round(perc2) });
             }
 
-            // 3ª passada completa = 🥉 Bronze (domínio total!)
-            if (passada3Complete === totalTopicos) {
-                medalhas.push({ emoji: '🥉', nome: 'Bronze - 3ª Passada Completa', tipo: '3ª' });
+            // MEDALHA DA 3ª PASSADA
+            if (perc3 === 100) {
+                medalhas.push({ emoji: '🥇', nome: 'Ouro - 3ª Passada', tipo: '3ª', nivel: 'ouro', progresso: 100 });
+            } else if (perc3 >= 50) {
+                medalhas.push({ emoji: '🥈', nome: 'Prata - 3ª Passada', tipo: '3ª', nivel: 'prata', progresso: Math.round(perc3) });
+            } else if (perc3 >= 30) {
+                medalhas.push({ emoji: '🥉', nome: 'Bronze - 3ª Passada', tipo: '3ª', nivel: 'bronze', progresso: Math.round(perc3) });
+            } else if (perc3 >= 20) {
+                medalhas.push({ emoji: '⭐', nome: 'Estrela - 3ª Passada', tipo: '3ª', nivel: 'estrela', progresso: Math.round(perc3) });
             }
 
             return medalhas;
         }
 
-        // Verificar se ganhou nova medalha (para mostrar popup)
+        // Verificar se ganhou nova medalha ou evoluiu (para mostrar popup)
         function verificarNovasMedalhas(materia) {
             const medalhasAtuais = Storage.get('medalhasConquistadas', {});
             const passadas = Storage.get('topicPassadas', {});
@@ -3916,18 +3973,154 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             const medalhasNovas = getMedalhas(materia, passadas);
             const medalhasAntigas = medalhasAtuais[materia];
 
-            // Verificar se ganhou medalha nova
+            // Verificar cada passada se há evolução
             medalhasNovas.forEach(nova => {
-                const jaExiste = medalhasAntigas.some(antiga => antiga.tipo === nova.tipo);
-                if (!jaExiste) {
-                    // NOVA MEDALHA! Mostrar popup
+                const antigaDaMesmaPassada = medalhasAntigas.find(antiga => antiga.tipo === nova.tipo);
+
+                if (!antigaDaMesmaPassada) {
+                    // NOVA MEDALHA! (primeira vez nessa passada)
                     mostrarPopupConquista(materia, nova);
                     medalhasAntigas.push(nova);
+                } else if (antigaDaMesmaPassada.emoji !== nova.emoji) {
+                    // EVOLUÇÃO! Bronze→Prata ou Prata→Ouro
+                    mostrarPopupConquista(materia, nova);
+                    // Atualizar a medalha existente
+                    const index = medalhasAntigas.findIndex(m => m.tipo === nova.tipo);
+                    medalhasAntigas[index] = nova;
                 }
             });
 
             medalhasAtuais[materia] = medalhasAntigas;
             Storage.set('medalhasConquistadas', medalhasAtuais);
+
+            // Verificar se ganhou CERTIFICADO DE BRAVURA (100% do programa completo)
+            verificarCertificadoBravura();
+        }
+
+        // Verificar se ganhou o Certificado de Bravura e Conclusão
+        // Ganha quando completar 100% do conteúdo do edital (em qualquer passada)
+        function verificarCertificadoBravura() {
+            const passadas = Storage.get('topicPassadas', {});
+            const certificados = Storage.get('certificadosConquistados', []);
+
+            // Verificar se já tem o certificado
+            if (certificados.includes('bravura')) {
+                return; // Já ganhou
+            }
+
+            // Verificar se completou 100% do programa
+            let totalTopicos = 0;
+            let topicosComPassada = 0;
+
+            Object.keys(extractedEditalTopics).forEach(materia => {
+                const topicos = extractedEditalTopics[materia] || [];
+                totalTopicos += topicos.length;
+
+                topicos.forEach(topico => {
+                    const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
+                    if (numPassadas >= 1) {
+                        topicosComPassada++;
+                    }
+                });
+            });
+
+            // Se completou 100% = CERTIFICADO!
+            if (totalTopicos > 0 && topicosComPassada === totalTopicos) {
+                certificados.push('bravura');
+                Storage.set('certificadosConquistados', certificados);
+                mostrarCertificadoBravura();
+            }
+        }
+
+        // Mostrar certificado animado de bravura e conclusão
+        function mostrarCertificadoBravura() {
+            const certificado = document.createElement('div');
+            certificado.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 100001;
+                animation: fadeIn 0.5s;
+            `;
+
+            certificado.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+                    padding: 50px;
+                    border-radius: 30px;
+                    max-width: 600px;
+                    width: 90%;
+                    text-align: center;
+                    box-shadow: 0 30px 80px rgba(255, 215, 0, 0.5);
+                    border: 8px solid #B8860B;
+                    position: relative;
+                    animation: certificadoEntrada 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                ">
+                    <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); font-size: 100px; animation: trofeuRotate 3s ease-in-out infinite;">
+                        🏆
+                    </div>
+
+                    <div style="margin-top: 80px;">
+                        <h1 style="color: #8B4513; margin: 0 0 20px 0; font-size: 36px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); font-family: Georgia, serif;">
+                            🎖️ CERTIFICADO DE BRAVURA 🎖️
+                        </h1>
+                        <div style="background: white; padding: 30px; border-radius: 15px; margin: 20px 0; box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);">
+                            <p style="color: #333; font-size: 18px; line-height: 1.8; margin: 0; font-family: Georgia, serif;">
+                                <strong>Parabéns!</strong><br>
+                                Você completou <strong>100% do conteúdo programático</strong> do edital!<br><br>
+                                Sua dedicação e comprometimento com os estudos demonstram<br>
+                                a bravura de um verdadeiro concurseiro! 💪
+                            </p>
+                        </div>
+                        <div style="font-size: 60px; margin: 20px 0; animation: estrelas 2s ease-in-out infinite;">
+                            ⭐ ⭐ ⭐
+                        </div>
+                        <button onclick="this.closest('div').parentElement.remove()" style="
+                            padding: 15px 40px;
+                            background: #8B4513;
+                            color: white;
+                            border: none;
+                            border-radius: 10px;
+                            font-size: 18px;
+                            font-weight: 700;
+                            cursor: pointer;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                            transition: transform 0.2s;
+                        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            🎉 CONTINUAR ESTUDANDO
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(certificado);
+
+            // Adicionar animações CSS se não existirem
+            if (!document.getElementById('certificadoStyles')) {
+                const style = document.createElement('style');
+                style.id = 'certificadoStyles';
+                style.textContent = `
+                    @keyframes certificadoEntrada {
+                        from { transform: scale(0) rotate(-180deg); opacity: 0; }
+                        to { transform: scale(1) rotate(0deg); opacity: 1; }
+                    }
+                    @keyframes trofeuRotate {
+                        0%, 100% { transform: translateX(-50%) rotate(-10deg) scale(1); }
+                        50% { transform: translateX(-50%) rotate(10deg) scale(1.2); }
+                    }
+                    @keyframes estrelas {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.5; transform: scale(1.1); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
         }
 
         // Popup animado estilo Candy Crush
@@ -3966,7 +4159,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
         function mostrarHistoricoConquistas() {
             const medalhasAtuais = Storage.get('medalhasConquistadas', {});
 
-            let historicoHtml = '<div style="max-height: 400px; overflow-y: auto;">';
+            let historicoHtml = '<div style="max-height: 400px; overflow-y: auto; padding-right: 10px;">';
 
             if (Object.keys(medalhasAtuais).length === 0) {
                 historicoHtml += '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhuma conquista ainda. Continue estudando! 💪</p>';
@@ -3981,9 +4174,12 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                         `;
                         medalhas.forEach(m => {
                             historicoHtml += `
-                                <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-secondary); padding: 8px 12px; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-secondary); padding: 10px 14px; border-radius: 8px; border: 2px solid var(--border);">
                                     <span style="font-size: 28px;">${m.emoji}</span>
-                                    <span style="font-size: 13px; color: var(--text-secondary);">${m.nome}</span>
+                                    <div>
+                                        <div style="font-size: 13px; color: var(--text-primary); font-weight: 600;">${m.nome}</div>
+                                        ${m.progresso ? `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${m.progresso}% completo</div>` : ''}
+                                    </div>
                                 </div>
                             `;
                         });
@@ -4001,7 +4197,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             const materias = Object.keys(extractedEditalTopics);
             const passadas = Storage.get('topicPassadas', {});
 
-            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+            let html = '<div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">';
             html += `<p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Total de ${materias.length} matéria${materias.length !== 1 ? 's' : ''} no edital</p>`;
 
             if (materias.length === 0) {
@@ -4038,7 +4234,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 topicosPorMateria[materia] = topicos.length;
             });
 
-            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+            let html = '<div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">';
             html += `<p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Total de ${totalTopicos} tópico${totalTopicos !== 1 ? 's' : ''} no edital</p>`;
 
             // Gráfico de barras simples
@@ -4086,7 +4282,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 estudadosPorMateria[materia] = { estudados, total: topicos.length };
             });
 
-            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+            let html = '<div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">';
             html += `<p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Total de ${totalEstudados} tópico${totalEstudados !== 1 ? 's' : ''} estudado${totalEstudados !== 1 ? 's' : ''}</p>`;
 
             // Gráfico de barras por matéria
@@ -4135,7 +4331,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 progressoPorMateria[materia] = { passada1, passada2, passada3, total: topicos.length };
             });
 
-            let html = '<div style="max-height: 500px; overflow-y: auto;">';
+            let html = '<div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">';
             html += `<p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">Progresso detalhado por passada</p>`;
 
             const materias = Object.keys(progressoPorMateria).sort();
@@ -4467,6 +4663,50 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             // Add active to selected tab
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById(tabName).classList.add('active');
+
+            // Se mudou para aba de estatísticas, atualizar histórico de medalhas
+            if (tabName === 'estatisticas') {
+                atualizarHistoricoMedalhasEstatisticas();
+            }
+        }
+
+        function atualizarHistoricoMedalhasEstatisticas() {
+            const medalhasAtuais = Storage.get('medalhasConquistadas', {});
+            const section = document.getElementById('medalhasHistoricoSection');
+            const content = document.getElementById('medalhasHistoricoContent');
+
+            if (Object.keys(medalhasAtuais).length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+
+            let html = '';
+            Object.keys(medalhasAtuais).sort().forEach(materia => {
+                const medalhas = medalhasAtuais[materia];
+                if (medalhas.length > 0) {
+                    html += `
+                        <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid var(--accent-primary);">
+                            <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 15px; font-size: 18px;">${materia}</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                    `;
+                    medalhas.forEach(m => {
+                        html += `
+                            <div style="display: flex; align-items: center; gap: 10px; background: var(--bg-secondary); padding: 12px 16px; border-radius: 10px; border: 2px solid var(--border);">
+                                <span style="font-size: 32px;">${m.emoji}</span>
+                                <div>
+                                    <div style="font-size: 13px; color: var(--text-primary); font-weight: 600;">${m.nome}</div>
+                                    ${m.progresso ? `<div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${m.progresso}% completo</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div></div>';
+                }
+            });
+
+            content.innerHTML = html;
         }
 
         // ==================== END DASHBOARD ====================

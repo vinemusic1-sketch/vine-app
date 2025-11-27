@@ -3233,12 +3233,71 @@ Por favor, organize sua resposta de forma clara, destacando:
 
         // ==================== NOVO SISTEMA DE CRONOGRAMA INTELIGENTE ====================
 
-        // Variáveis globais para o cronograma
+        // ==================== REPOSITÓRIO CENTRAL DE DADOS ====================
+        // Tudo fica salvo aqui e persiste no localStorage
+
+        const AppData = {
+            // Dados do edital analisado
+            edital: {
+                cargoDesejado: '',
+                textoCompleto: '',
+                dataProva: '',
+                disciplinas: [], // Análise completa pela IA ou parser
+                analisadoEm: null
+            },
+
+            // Dados do cronograma
+            cronograma: {
+                horasDia: 4,
+                nivel: 'intermediario',
+                ciclosSemanais: [],
+                calendarioMensal: {}
+            },
+
+            // Salvar no localStorage
+            salvar() {
+                Storage.set('appData', {
+                    edital: this.edital,
+                    cronograma: this.cronograma
+                });
+            },
+
+            // Carregar do localStorage
+            carregar() {
+                const dados = Storage.get('appData', null);
+                if (dados) {
+                    this.edital = dados.edital || this.edital;
+                    this.cronograma = dados.cronograma || this.cronograma;
+                    return true;
+                }
+                return false;
+            },
+
+            // Limpar tudo
+            limpar() {
+                this.edital = {
+                    cargoDesejado: '',
+                    textoCompleto: '',
+                    dataProva: '',
+                    disciplinas: [],
+                    analisadoEm: null
+                };
+                this.cronograma = {
+                    horasDia: 4,
+                    nivel: 'intermediario',
+                    ciclosSemanais: [],
+                    calendarioMensal: {}
+                };
+                Storage.remove('appData');
+            }
+        };
+
+        // Variáveis globais para o cronograma (DEPRECATED - usar AppData)
         let cronogramaData = {
             cargo: '',
             dataProva: '',
             horasDia: 4,
-            disciplinas: [], // { nome, topicos: [], volume, incidencia, complexidade, dominioAluno, horasSugeridas }
+            disciplinas: [],
             ciclosSemanais: [],
             calendarioMensal: {}
         };
@@ -3408,9 +3467,74 @@ INSTRUÇÕES:
             return dataFutura.toISOString().split('T')[0];
         }
 
+        // Filtra apenas a seção do cargo específico no edital
+        function filtrarSecaoPorCargo(texto, cargo) {
+            // Normalizar cargo para busca
+            const cargoNormalizado = cargo.toLowerCase().trim();
+
+            // Padrões para identificar seções de cargo
+            const padroesCargo = [
+                // Padrão: "CARGO: Arquiteto" ou "CARGO - Arquiteto" ou "1. Arquiteto"
+                new RegExp(`(?:cargo|função|emprego|especialidade)[:\\s-]+[^\\n]*${cargoNormalizado}[^\\n]*`, 'i'),
+                // Padrão: Só o nome do cargo em maiúsculas ou com números
+                new RegExp(`^[\\d\\.\\)]*\\s*${cargoNormalizado}\\s*[\\d\\.\\)]*$`, 'im'),
+                // Padrão: "Para o cargo de Arquiteto"
+                new RegExp(`para\\s+(?:o\\s+)?cargo\\s+de\\s+[^\\n]*${cargoNormalizado}[^\\n]*`, 'i'),
+            ];
+
+            // Tentar encontrar onde começa a seção do cargo
+            let inicioSecao = -1;
+            let matchEncontrado = null;
+
+            for (const padrao of padroesCargo) {
+                const match = texto.match(padrao);
+                if (match) {
+                    inicioSecao = match.index;
+                    matchEncontrado = match[0];
+                    break;
+                }
+            }
+
+            if (inicioSecao === -1) {
+                // Não encontrou seção específica - retornar texto completo
+                console.log('⚠️ Seção do cargo não identificada. Processando edital completo.');
+                return texto;
+            }
+
+            // Encontrou! Agora precisa identificar onde TERMINA a seção deste cargo
+            const textoAPartir = texto.substring(inicioSecao);
+
+            // Padrões que indicam início de OUTRO cargo (fim da seção atual)
+            const padroesFimSecao = [
+                /\n(?:cargo|função|emprego|especialidade)[:\s-]+(?!.*${cargoNormalizado})/i,
+                /\n\d+\.?\s+[A-Z][A-Z\s]+(?:CONHECIMENTOS|CONTEÚDO)/i, // Nova seção em maiúsculas
+                /\n(?:ANEXO|QUADRO)\s+(?:I{1,3}|[0-9]+)/i, // Novo anexo
+                /\nCONCURSO\s+PÚBLICO/i, // Novo concurso
+            ];
+
+            let fimSecao = textoAPartir.length;
+
+            for (const padrao of padroesFimSecao) {
+                const match = textoAPartir.substring(100).match(padrao); // Pular primeiros 100 chars
+                if (match) {
+                    fimSecao = 100 + match.index;
+                    break;
+                }
+            }
+
+            const secaoFiltrada = textoAPartir.substring(0, fimSecao);
+
+            console.log(`✅ Seção do cargo "${cargo}" identificada (${secaoFiltrada.length} caracteres)`);
+
+            return secaoFiltrada;
+        }
+
         // Extrai disciplinas e tópicos do edital
         function extrairDisciplinasTopicos(texto, cargo, dominioBase) {
             const disciplinas = [];
+
+            // FILTRO POR CARGO: Tentar isolar apenas a seção do cargo específico
+            texto = filtrarSecaoPorCargo(texto, cargo);
 
             // Base de conhecimento de disciplinas comuns
             const disciplinasConhecidas = {
@@ -4562,12 +4686,31 @@ INSTRUÇÕES:
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
                     const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
-                    textoCompleto += pageText + '\n';
+
+                    // Melhor formatação: considerar posição Y para quebras de linha
+                    let lastY = null;
+                    let pageText = '';
+
+                    textContent.items.forEach(item => {
+                        const currentY = item.transform[5];
+
+                        // Se mudou de linha (Y diferente), adicionar quebra
+                        if (lastY !== null && Math.abs(currentY - lastY) > 5) {
+                            pageText += '\n';
+                        }
+
+                        pageText += item.str + ' ';
+                        lastY = currentY;
+                    });
+
+                    textoCompleto += pageText + '\n\n';
                 }
 
+                // Limpar e normalizar o texto extraído
+                textoCompleto = limparTextoExtraido(textoCompleto);
+
                 // Preencher textarea com o texto extraído
-                textArea.value = textoCompleto.trim();
+                textArea.value = textoCompleto;
 
                 // Restaurar dropzone
                 restaurarDropZone();
@@ -4599,6 +4742,26 @@ INSTRUÇÕES:
                     Formatos aceitos: PDF
                 </div>
             `;
+        }
+
+        // Limpar texto extraído de PDF
+        function limparTextoExtraido(texto) {
+            // 1. Remover espaços múltiplos (mais de 2 espaços seguidos)
+            texto = texto.replace(/ {3,}/g, ' ');
+
+            // 2. Remover espaços antes de pontuação
+            texto = texto.replace(/ ([,;:.!?)])/g, '$1');
+
+            // 3. Normalizar quebras de linha múltiplas (máximo 2)
+            texto = texto.replace(/\n{3,}/g, '\n\n');
+
+            // 4. Remover espaços no início/fim de linhas
+            texto = texto.split('\n').map(linha => linha.trim()).join('\n');
+
+            // 5. Remover linhas muito curtas (provavelmente lixo)
+            texto = texto.split('\n').filter(linha => linha.length > 2 || linha === '').join('\n');
+
+            return texto.trim();
         }
 
         // ==================== DASHBOARD ====================
@@ -5926,10 +6089,40 @@ INSTRUÇÕES:
             console.log('✅ Conteúdo programático carregado:', Object.keys(extractedEditalTopics).length, 'matérias');
         }
 
-        renderSavedEditais();
-        renderSavedCronogramas();
-        loadEditalInfo();
-        updateDashboard();
+        // ==================== INICIALIZAÇÃO DA APLICAÇÃO ====================
+        function inicializarApp() {
+            // 1. Carregar dados persistidos
+            const dadosCarregados = AppData.carregar();
+
+            if (dadosCarregados) {
+                console.log('✅ Dados carregados do localStorage');
+
+                // Se tem edital analisado, restaurar na interface
+                if (AppData.edital.disciplinas && AppData.edital.disciplinas.length > 0) {
+                    console.log(`📚 Edital restaurado: ${AppData.edital.disciplinas.length} disciplinas`);
+                    // Atualizar extractedEditalTopics para compatibilidade
+                    extractedEditalTopics = {};
+                    AppData.edital.disciplinas.forEach(disc => {
+                        extractedEditalTopics[disc.nome] = disc.topicos || [];
+                    });
+                }
+            }
+
+            // 2. Renderizar listas salvas
+            renderSavedEditais();
+            renderSavedCronogramas();
+
+            // 3. Carregar informações do edital
+            loadEditalInfo();
+
+            // 4. Atualizar dashboard
+            updateDashboard();
+
+            console.log('🚀 App inicializado');
+        }
+
+        // Executar ao carregar página
+        inicializarApp();
 
         // PWA - Register Service Worker
         if ('serviceWorker' in navigator) {

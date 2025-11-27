@@ -764,7 +764,7 @@
                         <h3 style="margin-bottom: 20px; color: var(--text-primary); font-size: 18px; display: flex; align-items: center; gap: 10px;">
                             📊 Distribuição por Disciplina
                         </h3>
-                        <div style="position: relative; height: 300px;">
+                        <div style="position: relative; height: 350px;">
                             <canvas id="chartPizza"></canvas>
                         </div>
                     </div>
@@ -774,7 +774,7 @@
                         <h3 style="margin-bottom: 20px; color: var(--text-primary); font-size: 18px; display: flex; align-items: center; gap: 10px;">
                             📈 Evolução do Progresso
                         </h3>
-                        <div style="position: relative; height: 300px;">
+                        <div style="position: relative; height: 350px;">
                             <canvas id="chartLinha"></canvas>
                         </div>
                     </div>
@@ -3979,6 +3979,10 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 chartPizzaInstance.destroy();
             }
 
+            // Pegar cor do texto do tema atual
+            const textColor = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
+            const bgColor = getComputedStyle(document.body).getPropertyValue('--bg-primary').trim();
+
             // Criar novo gráfico
             chartPizzaInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -3988,7 +3992,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                         data: data,
                         backgroundColor: backgroundColor.slice(0, labels.length),
                         borderWidth: 2,
-                        borderColor: getComputedStyle(document.body).getPropertyValue('--bg-primary')
+                        borderColor: bgColor
                     }]
                 },
                 options: {
@@ -3998,7 +4002,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: getComputedStyle(document.body).getPropertyValue('--text-primary'),
+                                color: textColor,
                                 padding: 15,
                                 font: {
                                     size: 11
@@ -4038,6 +4042,9 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         // Função para atualizar gráfico de linha (evolução do progresso)
         function atualizarGraficoLinha() {
+            // Primeiro, garantir que hoje está registrado
+            registrarProgressoHoje();
+
             const historicoProgresso = Storage.get('historicoProgresso', []);
 
             // Preparar dados
@@ -4045,9 +4052,12 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             const data = [];
 
             if (historicoProgresso.length === 0) {
-                // Se não há histórico, adicionar ponto atual
-                registrarProgressoHoje();
-                return; // Será chamado novamente após registrar
+                // Se ainda não há histórico, mostrar gráfico vazio
+                const ctx = document.getElementById('chartLinha');
+                if (chartLinhaInstance) {
+                    chartLinhaInstance.destroy();
+                }
+                return;
             }
 
             // Ordenar por data
@@ -4072,6 +4082,11 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                 chartLinhaInstance.destroy();
             }
 
+            // Pegar cores do tema atual
+            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent-primary').trim();
+            const textSecondary = getComputedStyle(document.body).getPropertyValue('--text-secondary').trim();
+            const borderColor = getComputedStyle(document.body).getPropertyValue('--border').trim();
+
             // Criar novo gráfico
             chartLinhaInstance = new Chart(ctx, {
                 type: 'line',
@@ -4080,14 +4095,14 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     datasets: [{
                         label: 'Progresso (%)',
                         data: data,
-                        borderColor: getComputedStyle(document.body).getPropertyValue('--accent-primary'),
-                        backgroundColor: getComputedStyle(document.body).getPropertyValue('--accent-primary') + '20',
+                        borderColor: accentColor,
+                        backgroundColor: accentColor + '20',
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
                         pointRadius: 4,
                         pointHoverRadius: 6,
-                        pointBackgroundColor: getComputedStyle(document.body).getPropertyValue('--accent-primary'),
+                        pointBackgroundColor: accentColor,
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2
                     }]
@@ -4100,23 +4115,23 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                             beginAtZero: true,
                             max: 100,
                             ticks: {
-                                color: getComputedStyle(document.body).getPropertyValue('--text-secondary'),
+                                color: textSecondary,
                                 callback: function(value) {
                                     return value + '%';
                                 }
                             },
                             grid: {
-                                color: getComputedStyle(document.body).getPropertyValue('--border')
+                                color: borderColor
                             }
                         },
                         x: {
                             ticks: {
-                                color: getComputedStyle(document.body).getPropertyValue('--text-secondary'),
+                                color: textSecondary,
                                 maxRotation: 45,
                                 minRotation: 45
                             },
                             grid: {
-                                color: getComputedStyle(document.body).getPropertyValue('--border')
+                                color: borderColor
                             }
                         }
                     },
@@ -4138,39 +4153,50 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
         // Função para registrar progresso do dia (chamada ao atualizar dashboard)
         function registrarProgressoHoje() {
+            // Só registra se houver conteúdo programático
+            if (Object.keys(extractedEditalTopics).length === 0) {
+                return;
+            }
+
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0); // Zerar horas para comparar apenas a data
 
             const historicoProgresso = Storage.get('historicoProgresso', []);
 
+            // Calcular progresso atual
+            const passadas = Storage.get('topicPassadas', {});
+            let totalTopicos = 0;
+            let topicosComPassada = 0;
+
+            Object.keys(extractedEditalTopics).forEach(materia => {
+                const topicos = extractedEditalTopics[materia] || [];
+                totalTopicos += topicos.length;
+
+                topicos.forEach(topico => {
+                    const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
+                    if (numPassadas >= 1) {
+                        topicosComPassada++;
+                    }
+                });
+            });
+
+            const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
+
             // Verificar se já tem registro de hoje
-            const jaRegistrouHoje = historicoProgresso.some(registro => {
+            const indexHoje = historicoProgresso.findIndex(registro => {
                 const dataRegistro = new Date(registro.data);
                 dataRegistro.setHours(0, 0, 0, 0);
                 return dataRegistro.getTime() === hoje.getTime();
             });
 
-            if (!jaRegistrouHoje) {
-                // Calcular progresso atual
-                const passadas = Storage.get('topicPassadas', {});
-                let totalTopicos = 0;
-                let topicosComPassada = 0;
-
-                Object.keys(extractedEditalTopics).forEach(materia => {
-                    const topicos = extractedEditalTopics[materia] || [];
-                    totalTopicos += topicos.length;
-
-                    topicos.forEach(topico => {
-                        const numPassadas = passadas[materia] ? (passadas[materia][topico] || 0) : 0;
-                        if (numPassadas >= 1) {
-                            topicosComPassada++;
-                        }
-                    });
-                });
-
-                const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
-
-                // Adicionar registro
+            if (indexHoje >= 0) {
+                // Atualizar registro de hoje se o percentual mudou
+                if (historicoProgresso[indexHoje].percentual !== percentual) {
+                    historicoProgresso[indexHoje].percentual = percentual;
+                    Storage.set('historicoProgresso', historicoProgresso);
+                }
+            } else {
+                // Adicionar novo registro
                 historicoProgresso.push({
                     data: hoje.toISOString(),
                     percentual: percentual

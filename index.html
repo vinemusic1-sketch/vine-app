@@ -4009,12 +4009,14 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                                 },
                                 generateLabels: function(chart) {
                                     const data = chart.data;
+                                    const textColor = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
                                     if (data.labels.length && data.datasets.length) {
                                         return data.labels.map((label, i) => {
                                             const value = data.datasets[0].data[i];
                                             return {
                                                 text: `${label}: ${value} tópicos`,
                                                 fillStyle: data.datasets[0].backgroundColor[i],
+                                                fontColor: textColor,
                                                 hidden: false,
                                                 index: i
                                             };

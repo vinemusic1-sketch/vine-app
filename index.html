@@ -858,42 +858,87 @@
 
         <!-- TAB: CRONOGRAMA -->
         <div id="cronograma" class="tab-content">
-            <div class="card">
-                <h2>Gerar Cronograma de Estudos com IA</h2>
+            <!-- ETAPA 1: Análise Inteligente do Edital -->
+            <div class="card" id="cronogramaEtapa1">
+                <h2>🔬 Análise Inteligente do Edital com IA</h2>
                 <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                    Preencha as informações abaixo e deixe a IA criar um cronograma personalizado de estudos.
+                    Cole o texto bruto do edital abaixo. A IA irá extrair automaticamente todas as disciplinas, conteúdos detalhados e criar um raio-X completo do concurso.
                 </p>
-                <div class="input-group">
-                    <label>Nome do Concurso</label>
-                    <input type="text" id="concursoNome" placeholder="Ex: TRT-SP - Analista Judiciário">
+
+                <!-- Informações Básicas -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="input-group">
+                        <label>🎯 Cargo / Concurso</label>
+                        <input type="text" id="cronoCargo" placeholder="Ex: Analista Judiciário - TRT SP">
+                    </div>
+                    <div class="input-group">
+                        <label>📅 Data da Prova</label>
+                        <input type="date" id="cronoDataProva">
+                    </div>
+                    <div class="input-group">
+                        <label>⏰ Horas/dia disponíveis</label>
+                        <input type="number" id="cronoHorasDia" value="4" min="1" max="16">
+                    </div>
                 </div>
+
+                <!-- Área para colar edital -->
                 <div class="input-group">
-                    <label>Data da Prova</label>
-                    <input type="date" id="dataProva">
+                    <label>📋 Cole o texto do edital completo aqui</label>
+                    <textarea
+                        id="cronoEditalBruto"
+                        placeholder="Cole aqui o texto completo do edital (conteúdo programático). A IA irá extrair e organizar tudo automaticamente..."
+                        style="min-height: 300px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.6;"
+                    ></textarea>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                        💡 <strong>Dica:</strong> Cole o texto sem se preocupar com formatação. A IA irá identificar disciplinas, subdivisões e todos os tópicos automaticamente.
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>Horas disponíveis por dia para estudo</label>
-                    <input type="number" id="horasDia" value="4" min="1" max="24">
+
+                <button class="btn" id="btnAnalisarEdital" style="font-size: 18px; padding: 15px 30px;">
+                    🚀 Analisar Edital com IA
+                </button>
+
+                <!-- Loading State -->
+                <div id="cronoLoadingAnalise" style="display: none; margin-top: 20px; text-align: center;">
+                    <div class="loading-spinner"></div>
+                    <p style="color: var(--text-secondary); margin-top: 15px;">
+                        🔍 Analisando edital com IA...<br>
+                        <span style="font-size: 13px;">Extraindo disciplinas, tópicos e buscando relevância...</span>
+                    </p>
                 </div>
-                <div class="input-group">
-                    <label>Matérias do Edital (uma por linha)</label>
-                    <textarea id="materiasEdital" placeholder="Direito Constitucional&#10;Direito Administrativo&#10;Português&#10;Raciocínio Lógico"></textarea>
+
+                <!-- Resultado da Análise (RAIO-X) -->
+                <div id="cronoRaioX" style="display: none; margin-top: 30px;">
+                    <!-- Será preenchido dinamicamente -->
                 </div>
-                <div class="input-group">
-                    <label>Seu nível de conhecimento atual</label>
-                    <select id="nivelConhecimento">
-                        <option value="iniciante">Iniciante</option>
-                        <option value="intermediario">Intermediário</option>
-                        <option value="avancado">Avançado</option>
-                    </select>
-                </div>
-                <button class="btn" id="generateCronograma">🤖 Gerar Cronograma com IA</button>
-                <div id="cronogramaOutput" style="margin-top: 20px;"></div>
             </div>
 
-            <div class="card">
-                <h2>Meus Cronogramas</h2>
-                <div id="savedCronogramaList"></div>
+            <!-- ETAPA 2: Ciclos Semanais Editáveis (aparece após análise) -->
+            <div class="card" id="cronogramaEtapa2" style="display: none;">
+                <h2>📅 Ciclos Semanais de Estudo</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Distribuição automática considerando: <strong>volume</strong>, <strong>incidência</strong>, <strong>complexidade</strong> e <strong>seu domínio</strong>. Totalmente editável!
+                </p>
+
+                <div id="cronoCiclosSemanais">
+                    <!-- Será preenchido com tabela de ciclos semanais -->
+                </div>
+
+                <button class="btn" id="btnGerarCalendario" style="margin-top: 20px;">
+                    📆 Gerar Calendário Mensal
+                </button>
+            </div>
+
+            <!-- ETAPA 3: Calendário Visual + YouTube Links (aparece após ciclos) -->
+            <div class="card" id="cronogramaEtapa3" style="display: none;">
+                <h2>📆 Calendário Mensal de Estudos</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Visualização mensal com links do YouTube para cada tópico. Acompanhe horas planejadas vs. realizadas.
+                </p>
+
+                <div id="cronoCalendarioMensal">
+                    <!-- Calendário visual será renderizado aqui -->
+                </div>
             </div>
         </div>
 
@@ -2072,27 +2117,16 @@
                 }
             });
 
-            window.Poe.registerHandler("cronograma-handler", (result) => {
+            window.Poe.registerHandler("cronograma-analise-handler", (result) => {
                 const msg = result.responses[0];
-                const outputEl = document.getElementById('cronogramaOutput');
 
                 if (msg.status === "error") {
-                    outputEl.innerHTML = `<div class="result-message" style="background: var(--danger); color: white;">Erro: ${msg.statusText}</div>`;
+                    document.getElementById('cronoLoadingAnalise').style.display = 'none';
+                    showNotification(`❌ Erro ao analisar edital: ${msg.statusText}`);
                 } else if (msg.status === "incomplete") {
-                    outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Gerando cronograma personalizado...</div><div class="ai-response">${msg.content}</div>`;
+                    // Manter loading ativo
                 } else if (msg.status === "complete") {
-                    outputEl.innerHTML = `<div class="ai-response">${msg.content}</div>`;
-
-                    // Save the cronograma
-                    const savedCronogramas = Storage.get('savedCronogramas', []);
-                    savedCronogramas.push({
-                        id: Date.now(),
-                        date: new Date().toLocaleString('pt-BR'),
-                        concurso: document.getElementById('concursoNome').value,
-                        response: msg.content
-                    });
-                    Storage.set('savedCronogramas', savedCronogramas);
-                    renderSavedCronogramas();
+                    processarAnaliseIA(msg.content);
                 }
             });
         }
@@ -3139,74 +3173,478 @@ Por favor, organize sua resposta de forma clara, destacando:
             speechSynthesis.speak(currentAnalysisUtterance);
         };
 
-        async function generateCronograma() {
-            const concurso = document.getElementById('concursoNome').value.trim();
-            const dataProva = document.getElementById('dataProva').value;
-            const horasDia = document.getElementById('horasDia').value;
-            const materias = document.getElementById('materiasEdital').value.trim();
-            const nivel = document.getElementById('nivelConhecimento').value;
+        // ==================== NOVO SISTEMA DE CRONOGRAMA INTELIGENTE ====================
 
-            if (!concurso || !dataProva || !materias) {
+        // Variáveis globais para o cronograma
+        let cronogramaData = {
+            cargo: '',
+            dataProva: '',
+            horasDia: 4,
+            disciplinas: [], // { nome, topicos: [], volume, incidencia, complexidade, dominioAluno, horasSugeridas }
+            ciclosSemanais: [],
+            calendarioMensal: {}
+        };
+
+        // ETAPA 1: Análise Inteligente do Edital
+        async function analisarEditalInteligente() {
+            const cargo = document.getElementById('cronoCargo').value.trim();
+            const dataProva = document.getElementById('cronoDataProva').value;
+            const horasDia = document.getElementById('cronoHorasDia').value;
+            const editalBruto = document.getElementById('cronoEditalBruto').value.trim();
+
+            if (!cargo || !dataProva || !editalBruto) {
                 showNotification('⚠️ Preencha todos os campos obrigatórios');
                 return;
             }
 
-            const outputEl = document.getElementById('cronogramaOutput');
-            outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Gerando cronograma personalizado...</div>`;
+            // Salvar dados básicos
+            cronogramaData.cargo = cargo;
+            cronogramaData.dataProva = dataProva;
+            cronogramaData.horasDia = parseInt(horasDia);
 
-            const hoje = new Date().toLocaleDateString('pt-BR');
-            const diasRestantes = Math.ceil((new Date(dataProva) - new Date()) / (1000 * 60 * 60 * 24));
+            // Mostrar loading
+            document.getElementById('cronoLoadingAnalise').style.display = 'block';
+            document.getElementById('cronoRaioX').style.display = 'none';
 
-            // Try Poe API first
+            // Chamar IA para análise
             if (window.Poe) {
-                const prompt = `Você é um especialista em preparação para concursos públicos. Crie um cronograma de estudos DETALHADO e PERSONALIZADO com as seguintes informações:
+                const prompt = `Você é um especialista em concursos públicos brasileiros. Analise o edital abaixo e forneça um JSON estruturado com as disciplinas, tópicos detalhados e análise de cada matéria.
 
-📋 CONCURSO: ${concurso}
-📅 DATA DA PROVA: ${dataProva} (${diasRestantes} dias restantes a partir de ${hoje})
-⏰ HORAS DISPONÍVEIS POR DIA: ${horasDia} horas
-📚 NÍVEL: ${nivel}
+🎯 CARGO: ${cargo}
 
-MATÉRIAS DO EDITAL:
-${materias}
+📋 EDITAL COMPLETO:
+${editalBruto}
 
-Por favor, crie um cronograma que inclua:
-1. Divisão semanal de estudos
-2. Distribuição equilibrada das matérias
-3. Períodos de revisão
-4. Simulados programados
-5. Dicas específicas para cada fase de preparação
-6. Estratégias de acordo com o nível de conhecimento (${nivel})
+IMPORTANTE: Retorne APENAS um JSON válido (sem markdown, sem explicações) no seguinte formato:
 
-Organize o cronograma de forma clara, usando formatação markdown para melhor visualização.`;
+{
+  "disciplinas": [
+    {
+      "nome": "Nome da Disciplina",
+      "topicos": ["Tópico 1", "Tópico 2", "Tópico 3", ...],
+      "volume": 1-10 (escala de volume de conteúdo),
+      "incidencia": 1-10 (frequência que cai em provas para esse cargo),
+      "complexidade": 1-10 (dificuldade da matéria),
+      "dominioAluno": 5 (assumir nível médio inicialmente, será editável),
+      "justificativa": "Breve explicação sobre incidência para o cargo"
+    }
+  ]
+}
+
+Extraia TODOS os tópicos detalhados. Use web search (você tem acesso) para determinar a incidência real de cada disciplina para o cargo "${cargo}".`;
 
                 try {
-                    await window.Poe.sendUserMessage(`@Claude-Sonnet-4.5 ${prompt}`, {
-                        handler: "cronograma-handler",
-                        stream: true,
+                    await window.Poe.sendUserMessage(`@GPT-5.1 ${prompt} --web_search True`, {
+                        handler: "cronograma-analise-handler",
+                        stream: false,
                         openChat: false
                     });
-                    return;
                 } catch (err) {
-                    console.log('Poe API não disponível, usando gerador offline');
+                    document.getElementById('cronoLoadingAnalise').style.display = 'none';
+                    showNotification(`❌ Erro: ${err.message || err}`);
                 }
+            } else {
+                document.getElementById('cronoLoadingAnalise').style.display = 'none';
+                showNotification('⚠️ Poe API não disponível. Certifique-se de estar usando o app na plataforma Poe.');
             }
+        }
 
-            // Fallback: Offline intelligent chronogram generator
-            setTimeout(() => {
-                const cronograma = generateCronogramaOffline(concurso, dataProva, horasDia, materias, nivel, diasRestantes);
-                outputEl.innerHTML = `<div class="ai-response">${cronograma}</div>`;
+        // Processa o JSON retornado pela IA
+        function processarAnaliseIA(conteudoIA) {
+            try {
+                // Tentar extrair JSON do conteúdo (pode vir com markdown)
+                let jsonStr = conteudoIA;
 
-                // Save the cronograma
-                const savedCronogramas = Storage.get('savedCronogramas', []);
-                savedCronogramas.push({
-                    id: Date.now(),
-                    date: new Date().toLocaleString('pt-BR'),
-                    concurso: concurso,
-                    response: cronograma
-                });
-                Storage.set('savedCronogramas', savedCronogramas);
-                renderSavedCronogramas();
-            }, 1000);
+                // Remover blocos de código markdown se existirem
+                const jsonMatch = conteudoIA.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[1];
+                } else if (conteudoIA.includes('{') && conteudoIA.includes('}')) {
+                    // Tentar extrair JSON diretamente
+                    const inicio = conteudoIA.indexOf('{');
+                    const fim = conteudoIA.lastIndexOf('}') + 1;
+                    jsonStr = conteudoIA.substring(inicio, fim);
+                }
+
+                const dados = JSON.parse(jsonStr);
+
+                if (!dados.disciplinas || !Array.isArray(dados.disciplinas)) {
+                    throw new Error('Formato inválido: disciplinas não encontradas');
+                }
+
+                // Salvar disciplinas
+                cronogramaData.disciplinas = dados.disciplinas.map(d => ({
+                    nome: d.nome || '',
+                    topicos: d.topicos || [],
+                    volume: parseInt(d.volume) || 5,
+                    incidencia: parseInt(d.incidencia) || 5,
+                    complexidade: parseInt(d.complexidade) || 5,
+                    dominioAluno: parseInt(d.dominioAluno) || 5,
+                    justificativa: d.justificativa || '',
+                    horasSugeridas: 0 // Será calculado
+                }));
+
+                // Calcular distribuição de horas
+                calcularDistribuicaoHoras();
+
+                // Exibir Raio-X
+                exibirRaioX();
+
+                // Esconder loading
+                document.getElementById('cronoLoadingAnalise').style.display = 'none';
+
+                // Avançar para Etapa 2
+                gerarCiclosSemanais();
+
+            } catch (err) {
+                console.error('Erro ao processar resposta da IA:', err);
+                document.getElementById('cronoLoadingAnalise').style.display = 'none';
+                showNotification('❌ Erro ao processar resposta da IA. Verifique se o formato está correto.');
+
+                // Exibir resposta bruta para debug
+                document.getElementById('cronoRaioX').innerHTML = `
+                    <div style="background: var(--danger); color: white; padding: 15px; border-radius: 8px;">
+                        <h4>❌ Erro ao processar JSON</h4>
+                        <p>Resposta recebida:</p>
+                        <pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; overflow-x: auto;">${conteudoIA}</pre>
+                    </div>
+                `;
+                document.getElementById('cronoRaioX').style.display = 'block';
+            }
+        }
+
+        // Calcula distribuição de horas com base nos 4 fatores
+        function calcularDistribuicaoHoras() {
+            const totalDisciplinas = cronogramaData.disciplinas.length;
+
+            // Calcular pontuação de prioridade para cada disciplina
+            cronogramaData.disciplinas.forEach(disc => {
+                // Fórmula de prioridade:
+                // volume (quanto mais, mais horas)
+                // incidência (quanto mais, mais horas)
+                // complexidade (quanto mais, mais horas)
+                // domínio do aluno (quanto MENOS domínio, MAIS horas)
+
+                const faltaDominio = 10 - disc.dominioAluno; // Inverter domínio
+                disc.pontuacaoPrioridade = (
+                    (disc.volume * 0.25) +
+                    (disc.incidencia * 0.35) +
+                    (disc.complexidade * 0.20) +
+                    (faltaDominio * 0.20)
+                );
+            });
+
+            // Calcular total de pontos
+            const totalPontos = cronogramaData.disciplinas.reduce((sum, d) => sum + d.pontuacaoPrioridade, 0);
+
+            // Distribuir horas proporcionalmente
+            const horasSemanais = cronogramaData.horasDia * 6; // 6 dias (domingo = revisão)
+            cronogramaData.disciplinas.forEach(disc => {
+                const proporcao = disc.pontuacaoPrioridade / totalPontos;
+                disc.horasSugeridas = Math.round(proporcao * horasSemanais * 10) / 10; // 1 casa decimal
+            });
+
+            // Ajustar para garantir que a soma seja exata
+            const somaHoras = cronogramaData.disciplinas.reduce((sum, d) => sum + d.horasSugeridas, 0);
+            if (somaHoras !== horasSemanais) {
+                const diferenca = horasSemanais - somaHoras;
+                cronogramaData.disciplinas[0].horasSugeridas += diferenca;
+                cronogramaData.disciplinas[0].horasSugeridas = Math.round(cronogramaData.disciplinas[0].horasSugeridas * 10) / 10;
+            }
+        }
+
+        // Exibe o Raio-X do edital
+        function exibirRaioX() {
+            const container = document.getElementById('cronoRaioX');
+
+            let html = `
+                <div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 25px; border-radius: 12px; color: white; margin-bottom: 25px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 24px;">🔬 Raio-X Completo do Edital</h3>
+                    <p style="margin: 0; opacity: 0.95;">${cronogramaData.cargo}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+                        ${cronogramaData.disciplinas.length} disciplinas identificadas e analisadas pela IA
+                    </p>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: var(--bg-tertiary); border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: var(--accent-primary); color: white;">
+                                <th style="padding: 12px; text-align: left;">Disciplina</th>
+                                <th style="padding: 12px; text-align: center;">Volume</th>
+                                <th style="padding: 12px; text-align: center;">Incidência</th>
+                                <th style="padding: 12px; text-align: center;">Complexidade</th>
+                                <th style="padding: 12px; text-align: center;">Seu Domínio</th>
+                                <th style="padding: 12px; text-align: center;">Horas/Semana</th>
+                                <th style="padding: 12px; text-align: center;">Tópicos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            cronogramaData.disciplinas.forEach((disc, idx) => {
+                const bgColor = idx % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-tertiary)';
+                html += `
+                    <tr style="background: ${bgColor}; border-bottom: 1px solid var(--border);">
+                        <td style="padding: 12px;">
+                            <strong style="color: var(--text-primary);">${disc.nome}</strong>
+                            ${disc.justificativa ? `<br><span style="font-size: 12px; color: var(--text-secondary);">${disc.justificativa}</span>` : ''}
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="display: inline-block; background: var(--accent-warm); color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">
+                                ${disc.volume}/10
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="display: inline-block; background: var(--accent-primary); color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">
+                                ${disc.incidencia}/10
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="display: inline-block; background: var(--danger); color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">
+                                ${disc.complexidade}/10
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="display: inline-block; background: var(--success); color: white; padding: 4px 10px; border-radius: 4px; font-weight: 600;">
+                                ${disc.dominioAluno}/10
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: 700; color: var(--accent-primary);">
+                                ${disc.horasSugeridas}h
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="exibirTopicosDisciplina(${idx})" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">
+                                Ver ${disc.topicos.length} tópicos
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--accent-primary);">
+                    <h4 style="margin: 0 0 10px 0; color: var(--accent-primary);">📊 Legenda dos Fatores</h4>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                        <li><strong>Volume:</strong> Quantidade de conteúdo da disciplina (1=pouco, 10=muito)</li>
+                        <li><strong>Incidência:</strong> Frequência que a matéria cai em provas para o cargo <em>${cronogramaData.cargo}</em> (baseado em pesquisa web)</li>
+                        <li><strong>Complexidade:</strong> Dificuldade da matéria (1=fácil, 10=difícil)</li>
+                        <li><strong>Seu Domínio:</strong> Nível atual de conhecimento (1=iniciante, 10=expert)</li>
+                        <li><strong>Horas/Semana:</strong> Distribuição automática considerando os 4 fatores acima</li>
+                    </ul>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // Exibe tópicos de uma disciplina em modal
+        function exibirTopicosDisciplina(idx) {
+            const disc = cronogramaData.disciplinas[idx];
+
+            let html = `
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">
+                    Total de <strong>${disc.topicos.length} tópicos</strong> identificados:
+                </p>
+                <ul style="column-count: 2; column-gap: 20px; line-height: 1.8; color: var(--text-primary);">
+            `;
+
+            disc.topicos.forEach(topico => {
+                html += `<li>${topico}</li>`;
+            });
+
+            html += `</ul>`;
+
+            showCustomDialog(`📚 ${disc.nome}`, html);
+        }
+
+        // ETAPA 2: Gerar Ciclos Semanais
+        function gerarCiclosSemanais() {
+            // Mostrar seção de ciclos
+            document.getElementById('cronogramaEtapa2').style.display = 'block';
+
+            // Calcular quantas semanas até a prova
+            const dataProva = new Date(cronogramaData.dataProva);
+            const hoje = new Date();
+            const diasRestantes = Math.ceil((dataProva - hoje) / (1000 * 60 * 60 * 24));
+            const semanasDisponiveis = Math.floor(diasRestantes / 7);
+
+            // Criar ciclos semanais
+            const container = document.getElementById('cronoCiclosSemanais');
+
+            let html = `
+                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0;">📅 Distribuição Semanal</h4>
+                    <p style="margin: 0; color: var(--text-secondary);">
+                        <strong>${semanasDisponiveis} semanas</strong> até a prova ·
+                        <strong>${cronogramaData.horasDia}h/dia</strong> ·
+                        <strong>${cronogramaData.horasDia * 6}h/semana</strong> (6 dias + 1 revisão)
+                    </p>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: var(--bg-tertiary); border-radius: 8px; overflow: hidden;">
+                        <thead>
+                            <tr style="background: var(--accent-primary); color: white;">
+                                <th style="padding: 12px; text-align: left;">Disciplina</th>
+                                <th style="padding: 12px; text-align: center;">Horas/Semana</th>
+                                <th style="padding: 12px; text-align: center;">Distribuição</th>
+                                <th style="padding: 12px; text-align: center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            cronogramaData.disciplinas.forEach((disc, idx) => {
+                const bgColor = idx % 2 === 0 ? 'var(--bg-secondary)' : 'var(--bg-tertiary)';
+
+                // Calcular quantos dias por semana
+                const diasPorSemana = Math.round((disc.horasSugeridas / cronogramaData.horasDia) * 10) / 10;
+
+                html += `
+                    <tr style="background: ${bgColor}; border-bottom: 1px solid var(--border);">
+                        <td style="padding: 12px;">
+                            <strong style="color: var(--text-primary);">${disc.nome}</strong>
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <input
+                                type="number"
+                                value="${disc.horasSugeridas}"
+                                min="0.5"
+                                step="0.5"
+                                style="width: 70px; padding: 6px; text-align: center; border: 2px solid var(--border); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary);"
+                                onchange="atualizarHorasDisciplina(${idx}, this.value)"
+                            >
+                        </td>
+                        <td style="padding: 12px; text-align: center; font-size: 13px; color: var(--text-secondary);">
+                            ≈ ${diasPorSemana} dias/semana
+                        </td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="editarDisciplinaCrono(${idx})" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">
+                                ✏️ Editar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, var(--success), var(--accent-warm)); color: white; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0;">✅ Sistema Totalmente Editável</h4>
+                    <p style="margin: 0; line-height: 1.6;">
+                        Ajuste as horas de cada disciplina conforme sua necessidade. O sistema redistribui automaticamente para manter o total de horas/semana.
+                    </p>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Atualiza horas de uma disciplina
+        function atualizarHorasDisciplina(idx, novoValor) {
+            const novasHoras = parseFloat(novoValor);
+            if (isNaN(novasHoras) || novasHoras < 0) return;
+
+            cronogramaData.disciplinas[idx].horasSugeridas = novasHoras;
+
+            // Atualizar display
+            gerarCiclosSemanais();
+
+            showNotification(`✅ Horas de ${cronogramaData.disciplinas[idx].nome} atualizadas para ${novasHoras}h/semana`);
+        }
+
+        // Editar disciplina (modal)
+        function editarDisciplinaCrono(idx) {
+            const disc = cronogramaData.disciplinas[idx];
+
+            let html = `
+                <div class="input-group">
+                    <label>Volume (1-10)</label>
+                    <input type="number" id="editVolume" value="${disc.volume}" min="1" max="10">
+                </div>
+                <div class="input-group">
+                    <label>Incidência (1-10)</label>
+                    <input type="number" id="editIncidencia" value="${disc.incidencia}" min="1" max="10">
+                </div>
+                <div class="input-group">
+                    <label>Complexidade (1-10)</label>
+                    <input type="number" id="editComplexidade" value="${disc.complexidade}" min="1" max="10">
+                </div>
+                <div class="input-group">
+                    <label>Seu Domínio (1-10)</label>
+                    <input type="number" id="editDominio" value="${disc.dominioAluno}" min="1" max="10">
+                </div>
+                <button class="btn" onclick="salvarEdicaoDisciplina(${idx})" style="width: 100%; margin-top: 10px;">
+                    💾 Salvar e Recalcular
+                </button>
+            `;
+
+            showCustomDialog(`✏️ Editar ${disc.nome}`, html);
+        }
+
+        // Salva edição e recalcula distribuição
+        function salvarEdicaoDisciplina(idx) {
+            const disc = cronogramaData.disciplinas[idx];
+
+            disc.volume = parseInt(document.getElementById('editVolume').value) || 5;
+            disc.incidencia = parseInt(document.getElementById('editIncidencia').value) || 5;
+            disc.complexidade = parseInt(document.getElementById('editComplexidade').value) || 5;
+            disc.dominioAluno = parseInt(document.getElementById('editDominio').value) || 5;
+
+            // Recalcular distribuição
+            calcularDistribuicaoHoras();
+
+            // Atualizar displays
+            exibirRaioX();
+            gerarCiclosSemanais();
+
+            // Fechar modal
+            document.querySelector('.custom-dialog-overlay')?.remove();
+
+            showNotification(`✅ ${disc.nome} atualizada! Distribuição recalculada.`);
+        }
+
+        // ETAPA 3: Gerar Calendário Mensal
+        function gerarCalendarioMensal() {
+            document.getElementById('cronogramaEtapa3').style.display = 'block';
+            const container = document.getElementById('cronoCalendarioMensal');
+
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📆</div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 10px;">Calendário Visual em Desenvolvimento</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                        Esta funcionalidade incluirá:<br>
+                        • Visualização mensal estilo calendário<br>
+                        • Distribuição das disciplinas por dia<br>
+                        • Links do YouTube para cada tópico<br>
+                        • Rastreamento de horas planejadas vs. realizadas<br>
+                        • Domingos dedicados a simulados
+                    </p>
+                    <p style="color: var(--accent-primary); font-weight: 600;">
+                        🚀 Implementação prevista na próxima atualização!
+                    </p>
+                </div>
+            `;
+
+            // Scroll suave até a seção
+            document.getElementById('cronogramaEtapa3').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Função legada (manter para compatibilidade, mas não usar)
+        async function generateCronograma() {
+            showNotification('⚠️ Use o novo sistema de cronograma inteligente na aba Cronograma!');
         }
 
         function generateCronogramaOffline(concurso, dataProva, horasDia, materias, nivel, diasRestantes) {
@@ -3709,7 +4147,8 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
         });
 
         document.getElementById('analyzeEdital').addEventListener('click', analyzeEdital);
-        document.getElementById('generateCronograma').addEventListener('click', generateCronograma);
+        document.getElementById('btnAnalisarEdital').addEventListener('click', analisarEditalInteligente);
+        document.getElementById('btnGerarCalendario').addEventListener('click', gerarCalendarioMensal);
 
         // ==================== DASHBOARD ====================
 

@@ -3648,28 +3648,25 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
             // Calculate stats
             let totalMaterias = Object.keys(extractedEditalTopics).length;
             let totalTopicos = 0;
-            let topicosComPassada = 0; // Tópicos com pelo menos 1 passada
-            let pontuacaoTotal = 0; // Pontuação total considerando passadas (máx 3 por tópico)
-            let pontuacaoAtual = 0; // Pontuação atual
+            let topicosComPassada = 0; // Tópicos com pelo menos 1 passada = progresso real
 
             Object.keys(extractedEditalTopics).forEach(materia => {
                 const topicos = extractedEditalTopics[materia];
                 totalTopicos += topicos.length;
-                pontuacaoTotal += topicos.length * 3; // Cada tópico pode ter 3 passadas
 
-                // Count studied topics for this materia
+                // Count studied topics for this materia (pelo menos 1 passada)
                 if (passadas[materia]) {
                     topicos.forEach(topico => {
                         const numPassadas = passadas[materia][topico] || 0;
                         if (numPassadas > 0) {
                             topicosComPassada++;
                         }
-                        pontuacaoAtual += numPassadas;
                     });
                 }
             });
 
-            const percentual = pontuacaoTotal > 0 ? Math.round((pontuacaoAtual / pontuacaoTotal) * 100) : 0;
+            // PROGRESSO = % de tópicos com pelo menos 1 passada
+            const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
 
             // Update stats cards
             document.getElementById('totalMaterias').textContent = totalMaterias;
@@ -3777,14 +3774,10 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     });
                 }
 
-                // NOVA LÓGICA: Progresso por passada completa
-                // 1ª passada completa = 33%, 2ª = 66%, 3ª = 100%
-                let percentualPassada1 = totalTopicos > 0 ? (passada1 / totalTopicos) * 100 : 0;
-                let percentualPassada2 = totalTopicos > 0 ? (passada2 / totalTopicos) * 100 : 0;
-                let percentualPassada3 = totalTopicos > 0 ? (passada3 / totalTopicos) * 100 : 0;
-
-                // Percentual geral = média das 3 passadas (cada uma vale 33.33%)
-                const percentual = Math.round((percentualPassada1 + percentualPassada2 + percentualPassada3) / 3);
+                // LÓGICA CORRETA: Progresso = % de tópicos com PELO MENOS 1 passada
+                // Se estudou 100% do conteúdo em 1 passada = 100% do edital coberto!
+                // 2ª e 3ª passadas são REVISÕES, não afetam o progresso principal
+                const percentual = totalTopicos > 0 ? Math.round((topicosComPassada / totalTopicos) * 100) : 0;
 
                 // Verificar se esta matéria está expandida
                 const isExpanded = expandedMaterias.has(materiaId);
@@ -3835,7 +3828,7 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                     html += `
                         <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border);">
                             <span style="flex: 1; color: var(--text-primary); font-size: 14px; line-height: 1.5;">
-                                <strong>${idx + 1}.</strong> ${topico}
+                                ${topico}
                             </span>
                             <div style="display: flex; gap: 15px; align-items: center; flex-shrink: 0;">
                                 <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
@@ -3856,6 +3849,11 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
                                            style="width: 18px; height: 18px; cursor: pointer; accent-color: #4CAF50;">
                                     <span style="color: #4CAF50; font-weight: 600; font-size: 13px;">3ª</span>
                                 </label>
+                                <button onclick="deleteTopico('${materia}', '${topico.replace(/'/g, "\\'")}')"
+                                        title="Excluir este tópico"
+                                        style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 8px;">
+                                    🗑️
+                                </button>
                             </div>
                         </div>
                     `;
@@ -3915,6 +3913,36 @@ Organize o cronograma de forma clara, usando formatação markdown para melhor v
 
             Storage.set('topicPassadas', passadas);
             updateDashboard();
+        }
+
+        function deleteTopico(materia, topico) {
+            showConfirmDialog(`Tem certeza que deseja excluir o tópico:<br><br>"<strong>${topico}</strong>"<br><br>da matéria "${materia}"?`, () => {
+                // Remover tópico do array
+                if (extractedEditalTopics[materia]) {
+                    extractedEditalTopics[materia] = extractedEditalTopics[materia].filter(t => t !== topico);
+
+                    // Se a matéria ficou sem tópicos, remove ela também
+                    if (extractedEditalTopics[materia].length === 0) {
+                        delete extractedEditalTopics[materia];
+                        const materiaId = materia.replace(/\s/g, '_');
+                        expandedMaterias.delete(materiaId);
+                        showNotification(`🗑️ Tópico excluído! A matéria "${materia}" foi removida pois ficou sem tópicos.`);
+                    } else {
+                        showNotification(`🗑️ Tópico excluído com sucesso!`);
+                    }
+
+                    Storage.set('conteudoProgramatico', extractedEditalTopics);
+                }
+
+                // Remover progresso de passadas deste tópico
+                const passadas = Storage.get('topicPassadas', {});
+                if (passadas[materia]) {
+                    delete passadas[materia][topico];
+                    Storage.set('topicPassadas', passadas);
+                }
+
+                updateDashboard();
+            });
         }
 
         function deleteMateria(materia) {

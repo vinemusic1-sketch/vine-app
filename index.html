@@ -1807,13 +1807,7 @@
             button.disabled = true;
 
             try {
-                // Adicionar prefixo models/ se necessário
-                let model = config.model;
-                if (!model.startsWith('models/')) {
-                    model = `models/${model}`;
-                }
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${config.apiKey}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1854,14 +1848,8 @@
                 throw new Error('Gemini API não configurada');
             }
 
-            let model = options.model || config.model;
-
-            // Adicionar prefixo "models/" se não tiver
-            if (!model.startsWith('models/')) {
-                model = `models/${model}`;
-            }
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${config.apiKey}`;
+            const model = options.model || config.model;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`;
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -2573,11 +2561,77 @@ Por favor, organize sua resposta de forma clara, destacando:
                         temperature: 0.7
                     });
 
+                    console.log('✅ Resposta do Gemini recebida');
+
+                    // Processar resposta offline também para extrair disciplinas
+                    const foundSubjects = [];
+                    const commonSubjects = [
+                        'Português', 'Língua Portuguesa', 'Redação',
+                        'Matemática', 'Matemática Financeira',
+                        'Raciocínio Lógico', 'Lógica',
+                        'Informática', 'Noções de Informática',
+                        'Direito Constitucional', 'Constitucional',
+                        'Direito Administrativo', 'Administrativo',
+                        'Direito Penal', 'Penal',
+                        'Direito Processual Penal', 'Processual Penal',
+                        'Direito Civil', 'Civil',
+                        'Direito do Trabalho', 'Trabalho',
+                        'Direito Tributário', 'Tributário',
+                        'Direito Previdenciário', 'Previdenciário',
+                        'Contabilidade', 'Contabilidade Geral',
+                        'Administração', 'Administração Pública',
+                        'Economia', 'Atualidades', 'Conhecimentos Gerais',
+                        'Legislação', 'Estatística', 'Ética'
+                    ];
+
+                    commonSubjects.forEach(subject => {
+                        const regex = new RegExp(subject, 'gi');
+                        const matches = input.match(regex);
+                        if (matches && matches.length > 0 && !foundSubjects.includes(subject)) {
+                            foundSubjects.push(subject);
+                        }
+                    });
+
+                    // Extrair data da prova
+                    let dataProva = null;
+                    const provaPatterns = [
+                        /(?:data\s+da\s+prova|realização\s+da\s+prova|aplicação\s+da\s+prova|prova\s+objetiva)[^\n]{0,80}?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/gi,
+                        /prova[^\n]{0,50}?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/gi
+                    ];
+
+                    for (const pattern of provaPatterns) {
+                        const match = input.match(pattern);
+                        if (match && match.length > 0) {
+                            const dateStr = match[0].match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/);
+                            if (dateStr) {
+                                dataProva = dateStr[0];
+                                break;
+                            }
+                        }
+                    }
+
+                    // Mostrar disciplinas em lista vertical
+                    if (foundSubjects.length > 0) {
+                        mostrarDisciplinasVerticais(foundSubjects);
+                        preencherConteudoProgramatico(input, foundSubjects);
+                    }
+
+                    // Salvar no AppData
+                    AppData.edital.textoCompleto = input;
+                    AppData.edital.dataProva = dataProva || '';
+                    AppData.edital.disciplinas = foundSubjects.map(nome => ({
+                        nome: nome,
+                        topicos: extractTopics(input, nome) || []
+                    }));
+                    AppData.edital.analisadoEm = new Date().toISOString();
+                    AppData.salvar();
+
+                    // Exibir resultado do Gemini
                     outputEl.innerHTML = `
                         <div style="padding: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--success);">
-                            <strong style="color: var(--success);">✅ Análise gerada por Google Gemini ${geminiConfig.model.replace('gemini-', '').replace('-latest', '')}</strong>
+                            <strong style="color: var(--success);">✅ Análise gerada por Google Gemini ${geminiConfig.model.replace('gemini-', '')}</strong>
                         </div>
-                        <div class="ai-response">${response.replace(/\n/g, '<br>')}</div>
+                        <div class="ai-response" style="white-space: pre-wrap;">${response}</div>
                     `;
 
                     // Save the analysis
@@ -2591,6 +2645,7 @@ Por favor, organize sua resposta de forma clara, destacando:
                     renderSavedEditais();
 
                     showNotification('✅ Análise concluída com Gemini!');
+                    console.log('✅ Dados salvos:', foundSubjects.length, 'disciplinas');
                     return;
 
                 } catch (err) {

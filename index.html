@@ -1385,12 +1385,12 @@
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Modelo:</label>
                         <select id="geminiModel" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
-                            <option value="gemini-2.5-flash-latest">⚡ Gemini 2.5 Flash (Rápido e Barato - Recomendado)</option>
-                            <option value="gemini-2.0-pro-latest">🧠 Gemini 2.0 Pro (Balanceado)</option>
-                            <option value="gemini-3.0-pro-latest">🚀 Gemini 3.0 Pro (Máxima Performance)</option>
+                            <option value="gemini-1.5-flash">⚡ Gemini 1.5 Flash (Rápido e Barato - Recomendado)</option>
+                            <option value="gemini-1.5-pro">🧠 Gemini 1.5 Pro (Mais Poderoso)</option>
+                            <option value="gemini-2.0-flash-exp">🚀 Gemini 2.0 Flash Experimental (Novo)</option>
                         </select>
                         <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
-                            💡 Flash é ideal para análise de editais: 1M tokens de contexto, super rápido e econômico
+                            💡 Flash 1.5 é ideal para análise de editais: 1M tokens de contexto, super rápido e econômico
                         </p>
                     </div>
 
@@ -1742,7 +1742,7 @@
                 () => {
                     Storage.remove('geminiConfig');
                     document.getElementById('geminiApiKey').value = '';
-                    document.getElementById('geminiModel').value = 'gemini-2.5-flash-latest';
+                    document.getElementById('geminiModel').value = 'gemini-1.5-flash';
                     atualizarStatusGemini();
                     showNotification('🗑️ Configuração do Gemini removida');
                 }

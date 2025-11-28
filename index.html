@@ -6964,41 +6964,51 @@ INSTRUÇÕES:
 
             const prompt = `Você é um especialista em análise de editais de concursos públicos brasileiros.
 
-CONCURSO: ${concurso}
-CARGO: ${cargo}
+IMPORTANTE: Analise CUIDADOSAMENTE o edital completo abaixo e extraia as informações EXATAS que aparecem no documento.
 
-EDITAL:
+CONCURSO: ${concurso}
+CARGO ESPECÍFICO: ${cargo}
+
+EDITAL COMPLETO:
 ${textoEdital}
 
-Analise o edital e extraia APENAS as informações do cargo "${cargo}". Retorne no seguinte formato:
+INSTRUÇÕES:
+1. Procure no edital a seção específica sobre o cargo "${cargo}"
+2. Extraia APENAS as informações deste cargo (ignore outros cargos)
+3. Procure por:
+   - Data de realização da prova (procure em "Cronograma", "Datas Importantes", "Calendário")
+   - Número total de vagas para este cargo
+   - Valor do salário/remuneração inicial (pode estar em "Vencimentos", "Remuneração", "Subsídio")
+   - Requisitos de escolaridade/formação
+   - Disciplinas e conteúdo programático
 
-**CARGO:** ${cargo}
-**CONCURSO:** ${concurso}
-**DATA DA PROVA:** [data ou "não informada"]
-**VAGAS:** [número ou "não informado"]
-**SALÁRIO:** [valor ou "não informado"]
-**ESCOLARIDADE:** [requisito ou "não informado"]
+RETORNE EXATAMENTE NO FORMATO ABAIXO (copie os valores EXATOS do edital):
 
-**DISCIPLINAS E CONTEÚDO:**
+**DATA_PROVA:** [data no formato DD/MM/AAAA - procure em todo o edital por "prova", "aplicação", "exame"]
+**VAGAS_TOTAL:** [número exato de vagas do cargo ${cargo}]
+**SALARIO_INICIAL:** [valor exato com R$ - procure por "vencimento", "remuneração", "subsídio"]
+**ESCOLARIDADE_REQUISITO:** [formação exigida - ex: "Ensino Médio Completo", "Nível Superior em..."]
+**ORGAO:** [nome do órgão realizador]
 
-1. **[Nome da Disciplina]** ([X questões] se informado)
+**DISCIPLINAS_CONTEUDO:**
+
+1. **[Nome Disciplina]** ([X questões] ou [Peso X] se informado)
    - Tópico 1
    - Tópico 2
    - Tópico 3
 
-[Continue para todas as disciplinas]
-
-**OBSERVAÇÕES:**
-- [Informações relevantes]`;
+Seja PRECISO. Se não encontrar alguma informação, escreva "NÃO CONSTA NO EDITAL".`;
 
             try {
                 const response = await callGeminiAPI(prompt, {
                     maxOutputTokens: 8192,
-                    temperature: 0.5
+                    temperature: 0.3  // Mais baixo = mais preciso
                 });
 
+                console.log('📄 Resposta do Gemini (primeiros 500 chars):', response.substring(0, 500));
+
                 // Processar e salvar resposta
-                processarRespostaGemini(response);
+                processarRespostaGemini(response, cargo, concurso);
                 showNotification('✅ Edital analisado com sucesso!');
 
             } catch (error) {
@@ -7045,30 +7055,53 @@ Liste as disciplinas típicas para este cargo com seus principais tópicos.
         }
 
         // Processar resposta do Gemini e salvar
-        function processarRespostaGemini(response) {
-            // Extrair dados
-            const dataMatch = response.match(/\*\*DATA DA PROVA:\*\*\s*(.+)/i);
-            const vagasMatch = response.match(/\*\*VAGAS:\*\*\s*(.+)/i);
-            const salarioMatch = response.match(/\*\*SALÁRIO:\*\*\s*(.+)/i);
-            const escolaridadeMatch = response.match(/\*\*ESCOLARIDADE:\*\*\s*(.+)/i);
+        function processarRespostaGemini(response, cargo, concurso) {
+            console.log('🔍 Iniciando parsing da resposta...');
 
-            const dataProva = dataMatch ? dataMatch[1].trim() : '';
-            const vagas = vagasMatch ? vagasMatch[1].trim() : '';
-            const salario = salarioMatch ? salarioMatch[1].trim() : '';
-            const escolaridade = escolaridadeMatch ? escolaridadeMatch[1].trim() : '';
+            // Extrair dados com múltiplos padrões
+            const dataMatch = response.match(/\*\*DATA[_\s]PROVA:\*\*\s*(.+?)(?:\n|$)/i);
+            const vagasMatch = response.match(/\*\*VAGAS[_\s]TOTAL:\*\*\s*(.+?)(?:\n|$)/i);
+            const salarioMatch = response.match(/\*\*SALARIO[_\s]INICIAL:\*\*\s*(.+?)(?:\n|$)/i);
+            const escolaridadeMatch = response.match(/\*\*ESCOLARIDADE[_\s]REQUISITO:\*\*\s*(.+?)(?:\n|$)/i);
+            const orgaoMatch = response.match(/\*\*ORGAO:\*\*\s*(.+?)(?:\n|$)/i);
+
+            let dataProva = dataMatch ? dataMatch[1].trim() : 'Não informado';
+            let vagas = vagasMatch ? vagasMatch[1].trim() : 'Não informado';
+            let salario = salarioMatch ? salarioMatch[1].trim() : 'Não informado';
+            let escolaridade = escolaridadeMatch ? escolaridadeMatch[1].trim() : 'Não informado';
+            let orgao = orgaoMatch ? orgaoMatch[1].trim() : concurso;
+
+            // Limpar valores "NÃO CONSTA NO EDITAL"
+            if (dataProva.includes('NÃO CONSTA')) dataProva = 'Não informado';
+            if (vagas.includes('NÃO CONSTA')) vagas = 'Não informado';
+            if (salario.includes('NÃO CONSTA')) salario = 'Não informado';
+            if (escolaridade.includes('NÃO CONSTA')) escolaridade = 'Não informado';
+
+            console.log('📊 Dados extraídos:');
+            console.log('  - Data da Prova:', dataProva);
+            console.log('  - Vagas:', vagas);
+            console.log('  - Salário:', salario);
+            console.log('  - Escolaridade:', escolaridade);
+            console.log('  - Órgão:', orgao);
 
             // Salvar no AppData
             AppData.edital.dataProva = dataProva;
+            AppData.edital.cargoDesejado = cargo;
             AppData.salvar();
 
-            // Salvar informações adicionais
+            // Salvar informações adicionais no perfil
             const perfil = Storage.get('perfilUsuario', {});
+            perfil.dataProva = dataProva;
             perfil.vagas = vagas;
             perfil.salario = salario;
             perfil.escolaridade = escolaridade;
+            perfil.orgao = orgao;
             Storage.set('perfilUsuario', perfil);
 
-            console.log('✅ Dados salvos:', perfil);
+            // Atualizar dashboard imediatamente
+            carregarDadosPerfil();
+
+            console.log('✅ Dados salvos no perfil:', perfil);
         }
 
         // Carregar dados do perfil no Dashboard
@@ -7077,13 +7110,24 @@ Liste as disciplinas típicas para este cargo com seus principais tópicos.
 
             if (!perfil) return;
 
+            console.log('📋 Carregando perfil no dashboard:', perfil);
+
             // Atualizar campos do dashboard
-            document.getElementById('displayCargo').textContent = perfil.cargo || 'Não informado';
-            document.getElementById('displayDataProva').textContent = perfil.dataProva || AppData.edital.dataProva || 'Não informado';
-            document.getElementById('displayVagas').textContent = perfil.vagas || 'Não informado';
-            document.getElementById('displaySalario').textContent = perfil.salario || 'Não informado';
-            document.getElementById('displayOrgao').textContent = perfil.concurso || 'Não informado';
-            document.getElementById('displayEscolaridade').textContent = perfil.escolaridade || 'Não informado';
+            const displayCargo = document.getElementById('displayCargo');
+            const displayDataProva = document.getElementById('displayDataProva');
+            const displayVagas = document.getElementById('displayVagas');
+            const displaySalario = document.getElementById('displaySalario');
+            const displayOrgao = document.getElementById('displayOrgao');
+            const displayEscolaridade = document.getElementById('displayEscolaridade');
+
+            if (displayCargo) displayCargo.textContent = perfil.cargo || 'Não informado';
+            if (displayDataProva) displayDataProva.textContent = perfil.dataProva || AppData.edital.dataProva || 'Não informado';
+            if (displayVagas) displayVagas.textContent = perfil.vagas || 'Não informado';
+            if (displaySalario) displaySalario.textContent = perfil.salario || 'Não informado';
+            if (displayOrgao) displayOrgao.textContent = perfil.orgao || perfil.concurso || 'Não informado';
+            if (displayEscolaridade) displayEscolaridade.textContent = perfil.escolaridade || 'Não informado';
+
+            console.log('✅ Dashboard atualizado');
         }
 
         // Verificar se é primeira vez

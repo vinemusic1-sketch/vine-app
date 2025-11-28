@@ -2544,16 +2544,43 @@
             const geminiConfig = Storage.get('geminiConfig', null);
             if (geminiConfig && geminiConfig.apiKey) {
                 console.log('🚀 Usando Google Gemini API...');
-                const prompt = `Você é um especialista em análise de editais de concursos públicos. Analise o seguinte texto do edital e forneça informações claras e organizadas:
+                const prompt = `Você é um especialista em análise de editais de concursos públicos brasileiros. Analise o edital abaixo e extraia APENAS as informações essenciais.
 
+EDITAL:
 ${input}
 
-Por favor, organize sua resposta de forma clara, destacando:
-- Disciplinas e conteúdos programáticos
-- Pesos e número de questões (se mencionado)
-- Datas importantes (principalmente DATA DA PROVA)
-- Requisitos e informações relevantes
-- Dicas de estudo baseadas no edital`;
+INSTRUÇÕES:
+1. Identifique o CARGO do concurso
+2. Liste APENAS as disciplinas que fazem parte do conteúdo programático deste cargo específico (ignore outras disciplinas do edital que sejam de outros cargos)
+3. Para cada disciplina, liste os principais tópicos/assuntos cobrados
+4. Extraia a DATA DA PROVA
+5. Identifique quantas QUESTÕES ou PESO de cada disciplina (se houver)
+
+FORMATO DA RESPOSTA (use exatamente este formato):
+
+**CARGO:** [Nome do cargo]
+
+**DATA DA PROVA:** [data ou "não informada"]
+
+**DISCIPLINAS E CONTEÚDO:**
+
+1. **[Nome da Disciplina]** ([X questões] ou [Peso X] se informado)
+   - Tópico 1
+   - Tópico 2
+   - Tópico 3
+   [continue...]
+
+2. **[Nome da Disciplina 2]** ([X questões] ou [Peso X] se informado)
+   - Tópico 1
+   - Tópico 2
+   [continue...]
+
+[Continue para todas as disciplinas do cargo]
+
+**OBSERVAÇÕES IMPORTANTES:**
+- [Requisitos, escolaridade, ou outras informações relevantes]
+
+Seja OBJETIVO e liste APENAS as disciplinas do cargo analisado.`;
 
                 try {
                     const response = await callGeminiAPI(prompt, {
@@ -2563,66 +2590,60 @@ Por favor, organize sua resposta de forma clara, destacando:
 
                     console.log('✅ Resposta do Gemini recebida');
 
-                    // Processar resposta offline também para extrair disciplinas
-                    const foundSubjects = [];
-                    const commonSubjects = [
-                        'Português', 'Língua Portuguesa', 'Redação',
-                        'Matemática', 'Matemática Financeira',
-                        'Raciocínio Lógico', 'Lógica',
-                        'Informática', 'Noções de Informática',
-                        'Direito Constitucional', 'Constitucional',
-                        'Direito Administrativo', 'Administrativo',
-                        'Direito Penal', 'Penal',
-                        'Direito Processual Penal', 'Processual Penal',
-                        'Direito Civil', 'Civil',
-                        'Direito do Trabalho', 'Trabalho',
-                        'Direito Tributário', 'Tributário',
-                        'Direito Previdenciário', 'Previdenciário',
-                        'Contabilidade', 'Contabilidade Geral',
-                        'Administração', 'Administração Pública',
-                        'Economia', 'Atualidades', 'Conhecimentos Gerais',
-                        'Legislação', 'Estatística', 'Ética'
-                    ];
+                    // Extrair informações da resposta estruturada do Gemini
+                    const cargoMatch = response.match(/\*\*CARGO:\*\*\s*(.+)/i);
+                    const cargo = cargoMatch ? cargoMatch[1].trim() : 'Não identificado';
 
-                    commonSubjects.forEach(subject => {
-                        const regex = new RegExp(subject, 'gi');
-                        const matches = input.match(regex);
-                        if (matches && matches.length > 0 && !foundSubjects.includes(subject)) {
-                            foundSubjects.push(subject);
+                    const dataMatch = response.match(/\*\*DATA DA PROVA:\*\*\s*(.+)/i);
+                    const dataProva = dataMatch ? dataMatch[1].trim() : '';
+
+                    // Extrair disciplinas e tópicos da resposta do Gemini
+                    const disciplinasComTopicos = [];
+                    const disciplinaRegex = /\d+\.\s+\*\*(.+?)\*\*\s*(\([^)]+\))?\s*([\s\S]+?)(?=\n\d+\.\s+\*\*|\*\*OBSERVAÇÕES|$)/g;
+                    let match;
+
+                    while ((match = disciplinaRegex.exec(response)) !== null) {
+                        const nomeDisciplina = match[1].trim();
+                        const info = match[2] ? match[2].trim() : '';
+                        const topicosTexto = match[3];
+
+                        // Extrair tópicos (linhas que começam com -)
+                        const topicos = [];
+                        const topicoRegex = /-\s*(.+)/g;
+                        let topicoMatch;
+                        while ((topicoMatch = topicoRegex.exec(topicosTexto)) !== null) {
+                            topicos.push(topicoMatch[1].trim());
                         }
-                    });
 
-                    // Extrair data da prova
-                    let dataProva = null;
-                    const provaPatterns = [
-                        /(?:data\s+da\s+prova|realização\s+da\s+prova|aplicação\s+da\s+prova|prova\s+objetiva)[^\n]{0,80}?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/gi,
-                        /prova[^\n]{0,50}?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/gi
-                    ];
-
-                    for (const pattern of provaPatterns) {
-                        const match = input.match(pattern);
-                        if (match && match.length > 0) {
-                            const dateStr = match[0].match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/);
-                            if (dateStr) {
-                                dataProva = dateStr[0];
-                                break;
-                            }
-                        }
+                        disciplinasComTopicos.push({
+                            nome: nomeDisciplina,
+                            info: info,
+                            topicos: topicos
+                        });
                     }
 
-                    // Mostrar disciplinas em lista vertical
-                    if (foundSubjects.length > 0) {
-                        mostrarDisciplinasVerticais(foundSubjects);
-                        preencherConteudoProgramatico(input, foundSubjects);
+                    console.log('📚 Disciplinas extraídas:', disciplinasComTopicos.length);
+
+                    // Mostrar disciplinas em lista vertical com tópicos
+                    if (disciplinasComTopicos.length > 0) {
+                        mostrarDisciplinasComTopicos(disciplinasComTopicos);
+
+                        // Preencher conteúdo programático
+                        let conteudoTexto = '';
+                        disciplinasComTopicos.forEach(disc => {
+                            conteudoTexto += `${disc.nome}: ${disc.topicos.join(', ')}\n`;
+                        });
+                        const textarea = document.getElementById('conteudoProgramatico');
+                        if (textarea) {
+                            textarea.value = conteudoTexto.trim();
+                        }
                     }
 
                     // Salvar no AppData
                     AppData.edital.textoCompleto = input;
-                    AppData.edital.dataProva = dataProva || '';
-                    AppData.edital.disciplinas = foundSubjects.map(nome => ({
-                        nome: nome,
-                        topicos: extractTopics(input, nome) || []
-                    }));
+                    AppData.edital.cargoDesejado = cargo;
+                    AppData.edital.dataProva = dataProva;
+                    AppData.edital.disciplinas = disciplinasComTopicos;
                     AppData.edital.analisadoEm = new Date().toISOString();
                     AppData.salvar();
 
@@ -3365,6 +3386,44 @@ Por favor, organize sua resposta de forma clara, destacando:
                     <div style="display: flex; align-items: center; padding: 12px; background: var(--bg-secondary); border-radius: 6px; border-left: 4px solid var(--accent-primary);">
                         <span style="font-weight: 600; color: var(--accent-primary); margin-right: 12px; font-size: 18px;">${index + 1}.</span>
                         <span style="color: var(--text-primary); font-weight: 500;">${disciplina}</span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            lista.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        // Mostrar disciplinas COM tópicos (usado na análise do Gemini)
+        function mostrarDisciplinasComTopicos(disciplinas) {
+            const container = document.getElementById('disciplinasExtraidas');
+            const lista = document.getElementById('listaDisciplinas');
+
+            if (!disciplinas || disciplinas.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            let html = '<div style="display: grid; gap: 12px;">';
+
+            disciplinas.forEach((disc, index) => {
+                const topicosHtml = disc.topicos && disc.topicos.length > 0
+                    ? `<ul style="margin: 10px 0 0 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                        ${disc.topicos.map(topico => `<li>${topico}</li>`).join('')}
+                       </ul>`
+                    : '<p style="color: var(--text-secondary); font-style: italic; margin-top: 8px;">Tópicos não especificados</p>';
+
+                html += `
+                    <div style="padding: 16px; background: var(--bg-secondary); border-radius: 8px; border-left: 4px solid var(--accent-primary);">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <span style="font-weight: 600; color: var(--accent-primary); font-size: 18px;">${index + 1}.</span>
+                            <div style="flex: 1;">
+                                <span style="color: var(--text-primary); font-weight: 600; font-size: 16px;">${disc.nome}</span>
+                                ${disc.info ? `<span style="color: var(--text-secondary); font-size: 13px; margin-left: 8px;">${disc.info}</span>` : ''}
+                            </div>
+                        </div>
+                        ${topicosHtml}
                     </div>
                 `;
             });

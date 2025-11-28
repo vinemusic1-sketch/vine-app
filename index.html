@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VINE CONCURSOS IA - Seu Aliado nos Estudos</title>
+    <title>CONCATENADO - Conectando o Futuro</title>
     <meta name="description" content="Assistente inteligente para preparação em concursos públicos com análise de editais, cronogramas, flashcards e muito mais">
     <meta name="theme-color" content="#00d9ff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="VINE IA">
+    <meta name="apple-mobile-web-app-title" content="CONCATENADO">
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -622,10 +622,64 @@
     </script>
 </head>
 <body>
+    <!-- TELA DE ONBOARDING/CADASTRO INICIAL -->
+    <div id="onboardingScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-primary); z-index: 9999; overflow-y: auto;">
+        <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <h1 style="font-size: 48px; margin-bottom: 10px;">🔗 CONCATENADO</h1>
+                <p style="color: var(--text-secondary); font-size: 18px;">Conectando o Futuro - Vamos configurar seu perfil de estudos</p>
+            </div>
+
+            <div style="background: var(--bg-secondary); padding: 40px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+                <h2 style="color: var(--accent-primary); margin-bottom: 30px;">📋 Cadastro Inicial</h2>
+
+                <!-- Nome do Concursando -->
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">👤 Seu Nome</label>
+                    <input type="text" id="onboardingNome" placeholder="Digite seu nome completo" style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 16px;">
+                </div>
+
+                <!-- Concurso -->
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">🏛️ Concurso</label>
+                    <input type="text" id="onboardingConcurso" placeholder="Ex: INSS 2025, TRT-SP 2024, Banco do Brasil..." style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 16px;">
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-top: 5px;">Digite o nome do concurso + ano</p>
+                </div>
+
+                <!-- Cargo Almejado -->
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">💼 Cargo Almejado</label>
+                    <input type="text" id="onboardingCargo" placeholder="Ex: Técnico do Seguro Social, Analista Judiciário..." style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 16px;">
+                </div>
+
+                <!-- Anexar Edital (Opcional) -->
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">📄 Edital (Opcional)</label>
+                    <div id="onboardingPdfDrop" style="border: 2px dashed var(--border); border-radius: 8px; padding: 30px; text-align: center; background: var(--bg-tertiary); cursor: pointer; transition: all 0.3s;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">📎</div>
+                        <p style="color: var(--text-primary); font-weight: 600; margin: 0 0 5px 0;">Arraste o PDF do edital aqui</p>
+                        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">ou clique para selecionar (opcional)</p>
+                        <input type="file" id="onboardingPdfInput" accept=".pdf" style="display: none;">
+                    </div>
+                    <p id="onboardingPdfStatus" style="margin-top: 10px; color: var(--success); font-size: 14px; display: none;"></p>
+                </div>
+
+                <!-- Botão de Finalizar Cadastro -->
+                <button onclick="finalizarCadastro()" style="width: 100%; padding: 18px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 16px rgba(0, 217, 255, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 24px rgba(0, 217, 255, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 16px rgba(0, 217, 255, 0.3)'">
+                    🚀 Começar Meus Estudos
+                </button>
+
+                <p style="text-align: center; color: var(--text-secondary); font-size: 13px; margin-top: 20px;">
+                    ✨ Você poderá editar essas informações depois no Dashboard
+                </p>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         <header>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h1 style="margin: 0;">📚 VINE CONCURSOS IA</h1>
+                <h1 style="margin: 0;">🔗 CONCATENADO</h1>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <label style="color: var(--text-secondary); font-size: 14px;">Tema:</label>
                     <select id="themeSelector" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer;">
@@ -633,9 +687,6 @@
                         <option value="kindle">📖 Kindle (Sépia)</option>
                         <option value="light">☀️ Claro</option>
                     </select>
-                    <button onclick="switchTab('config')" style="padding: 8px 16px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='var(--accent-primary)'; this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.background='var(--bg-secondary)'; this.style.borderColor='var(--border)';">
-                        ⚙️ Config
-                    </button>
                 </div>
             </div>
             <div class="tabs">
@@ -1696,6 +1747,12 @@
 
         // ========== GOOGLE GEMINI API FUNCTIONS ==========
 
+        // API Key configurada (oculta do usuário)
+        const GEMINI_CONFIG = {
+            apiKey: 'AIzaSyAZD1Kg20XcqNupkW_E_M2phgsjRIwto8U',
+            model: 'gemini-1.5-pro'
+        };
+
         // Toggle visibilidade da API Key
         function toggleApiKeyVisibility() {
             const input = document.getElementById('geminiApiKey');
@@ -1807,7 +1864,7 @@
             button.disabled = true;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${config.model}:generateContent?key=${config.apiKey}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1822,12 +1879,19 @@
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || 'Erro desconhecido');
+                    let errorMessage = `HTTP ${response.status}`;
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error?.message || errorMessage;
+                        console.error('Erro detalhado:', error);
+                    } catch (e) {
+                        console.error('Erro ao parsear resposta');
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const data = await response.json();
-                console.log('Resposta do Gemini:', data);
+                console.log('✅ Resposta do Gemini:', data);
 
                 showNotification('✅ Conexão com Gemini estabelecida com sucesso!');
 
@@ -1842,48 +1906,60 @@
 
         // Função para chamar API do Gemini
         async function callGeminiAPI(prompt, options = {}) {
-            const config = Storage.get('geminiConfig', null);
+            // Usa a configuração hardcoded
+            const model = options.model || GEMINI_CONFIG.model;
+            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${GEMINI_CONFIG.apiKey}`;
 
-            if (!config || !config.apiKey) {
-                throw new Error('Gemini API não configurada');
-            }
+            console.log('🔗 Chamando Gemini:', model);
 
-            const model = options.model || config.model;
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: options.temperature || 0.7,
+                            topK: options.topK || 40,
+                            topP: options.topP || 0.95,
+                            maxOutputTokens: options.maxOutputTokens || 8192,
+                        }
+                    })
+                });
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: options.temperature || 0.7,
-                        topK: options.topK || 40,
-                        topP: options.topP || 0.95,
-                        maxOutputTokens: options.maxOutputTokens || 8192,
+                if (!response.ok) {
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.error?.message || errorMessage;
+                        console.error('❌ Erro da API:', error);
+                    } catch (e) {
+                        console.error('❌ Erro ao parsear resposta de erro');
                     }
-                })
-            });
+                    throw new Error(errorMessage);
+                }
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+                const data = await response.json();
+                console.log('📦 Resposta recebida:', data);
+
+                if (!data.candidates || data.candidates.length === 0) {
+                    throw new Error('Nenhuma resposta gerada pelo Gemini');
+                }
+
+                const text = data.candidates[0].content.parts[0].text;
+                console.log('✅ Texto extraído com sucesso');
+                return text;
+
+            } catch (error) {
+                console.error('❌ Erro na chamada Gemini:', error);
+                throw error;
             }
-
-            const data = await response.json();
-
-            if (!data.candidates || data.candidates.length === 0) {
-                throw new Error('Nenhuma resposta gerada pelo Gemini');
-            }
-
-            const text = data.candidates[0].content.parts[0].text;
-            return text;
         }
 
         // ========== FIM GEMINI API FUNCTIONS ==========
@@ -6761,7 +6837,273 @@ INSTRUÇÕES:
             console.log('🚀 App inicializado');
         }
 
+        // ========== ONBOARDING FUNCTIONS ==========
+
+        let onboardingPdfText = null;
+
+        // Setup drag & drop para PDF no onboarding
+        function setupOnboardingPdf() {
+            const dropArea = document.getElementById('onboardingPdfDrop');
+            const fileInput = document.getElementById('onboardingPdfInput');
+            const status = document.getElementById('onboardingPdfStatus');
+
+            // Click to select file
+            dropArea.addEventListener('click', () => fileInput.click());
+
+            // Drag & drop handlers
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => {
+                    dropArea.style.borderColor = 'var(--accent-primary)';
+                    dropArea.style.background = 'var(--bg-secondary)';
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => {
+                    dropArea.style.borderColor = 'var(--border)';
+                    dropArea.style.background = 'var(--bg-tertiary)';
+                });
+            });
+
+            dropArea.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) handlePdfFile(files[0]);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) handlePdfFile(e.target.files[0]);
+            });
+
+            async function handlePdfFile(file) {
+                if (file.type !== 'application/pdf') {
+                    status.textContent = '❌ Por favor, selecione um arquivo PDF';
+                    status.style.color = 'var(--danger)';
+                    status.style.display = 'block';
+                    return;
+                }
+
+                status.textContent = '⏳ Extraindo texto do PDF...';
+                status.style.color = 'var(--text-secondary)';
+                status.style.display = 'block';
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    let fullText = '';
+
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += pageText + '\n';
+                    }
+
+                    onboardingPdfText = fullText;
+                    status.textContent = `✅ PDF extraído com sucesso (${pdf.numPages} páginas)`;
+                    status.style.color = 'var(--success)';
+                } catch (error) {
+                    console.error('Erro ao extrair PDF:', error);
+                    status.textContent = '❌ Erro ao processar PDF';
+                    status.style.color = 'var(--danger)';
+                }
+            }
+        }
+
+        // Finalizar cadastro e processar com Gemini
+        async function finalizarCadastro() {
+            const nome = document.getElementById('onboardingNome').value.trim();
+            const concurso = document.getElementById('onboardingConcurso').value.trim();
+            const cargo = document.getElementById('onboardingCargo').value.trim();
+
+            // Validação
+            if (!nome || !concurso || !cargo) {
+                showNotification('⚠️ Por favor, preencha todos os campos obrigatórios');
+                return;
+            }
+
+            // Salvar perfil
+            const perfil = {
+                nome,
+                concurso,
+                cargo,
+                criadoEm: new Date().toISOString()
+            };
+
+            Storage.set('perfilUsuario', perfil);
+
+            // Fechar onboarding
+            document.getElementById('onboardingScreen').style.display = 'none';
+
+            showNotification('✅ Perfil criado com sucesso! Processando seu edital...');
+
+            // Se tem PDF, processar com Gemini
+            if (onboardingPdfText) {
+                // Processar edital
+                await processarEditalComGemini(onboardingPdfText, cargo, concurso);
+            } else {
+                // Buscar edital na web com Gemini
+                await buscarEditalNaWeb(concurso, cargo);
+            }
+
+            // Recarregar dashboard com dados do perfil
+            carregarDadosPerfil();
+        }
+
+        // Processar edital com Gemini
+        async function processarEditalComGemini(textoEdital, cargo, concurso) {
+            console.log('🚀 Processando edital com Gemini...');
+
+            const prompt = `Você é um especialista em análise de editais de concursos públicos brasileiros.
+
+CONCURSO: ${concurso}
+CARGO: ${cargo}
+
+EDITAL:
+${textoEdital}
+
+Analise o edital e extraia APENAS as informações do cargo "${cargo}". Retorne no seguinte formato:
+
+**CARGO:** ${cargo}
+**CONCURSO:** ${concurso}
+**DATA DA PROVA:** [data ou "não informada"]
+**VAGAS:** [número ou "não informado"]
+**SALÁRIO:** [valor ou "não informado"]
+**ESCOLARIDADE:** [requisito ou "não informado"]
+
+**DISCIPLINAS E CONTEÚDO:**
+
+1. **[Nome da Disciplina]** ([X questões] se informado)
+   - Tópico 1
+   - Tópico 2
+   - Tópico 3
+
+[Continue para todas as disciplinas]
+
+**OBSERVAÇÕES:**
+- [Informações relevantes]`;
+
+            try {
+                const response = await callGeminiAPI(prompt, {
+                    maxOutputTokens: 8192,
+                    temperature: 0.5
+                });
+
+                // Processar e salvar resposta
+                processarRespostaGemini(response);
+                showNotification('✅ Edital analisado com sucesso!');
+
+            } catch (error) {
+                console.error('Erro ao processar edital:', error);
+                showNotification('❌ Erro ao analisar edital: ' + error.message);
+            }
+        }
+
+        // Buscar edital na web
+        async function buscarEditalNaWeb(concurso, cargo) {
+            console.log('🔍 Buscando edital na web...');
+
+            const prompt = `Busque informações atualizadas sobre o concurso "${concurso}" para o cargo "${cargo}".
+
+Retorne as informações no formato:
+
+**CARGO:** ${cargo}
+**CONCURSO:** ${concurso}
+**DATA DA PROVA:** [data se encontrada]
+**VAGAS:** [número se encontrado]
+**SALÁRIO:** [valor se encontrado]
+**ESCOLARIDADE:** [requisito se encontrado]
+
+**DISCIPLINAS E CONTEÚDO:**
+
+Liste as disciplinas típicas para este cargo com seus principais tópicos.
+
+**OBSERVAÇÕES:**
+- Indique se as informações são do edital oficial ou estimativas baseadas em editais anteriores`;
+
+            try {
+                const response = await callGeminiAPI(prompt, {
+                    maxOutputTokens: 4096,
+                    temperature: 0.7
+                });
+
+                processarRespostaGemini(response);
+                showNotification('✅ Informações encontradas!');
+
+            } catch (error) {
+                console.error('Erro na busca:', error);
+                showNotification('❌ Erro ao buscar informações: ' + error.message);
+            }
+        }
+
+        // Processar resposta do Gemini e salvar
+        function processarRespostaGemini(response) {
+            // Extrair dados
+            const dataMatch = response.match(/\*\*DATA DA PROVA:\*\*\s*(.+)/i);
+            const vagasMatch = response.match(/\*\*VAGAS:\*\*\s*(.+)/i);
+            const salarioMatch = response.match(/\*\*SALÁRIO:\*\*\s*(.+)/i);
+            const escolaridadeMatch = response.match(/\*\*ESCOLARIDADE:\*\*\s*(.+)/i);
+
+            const dataProva = dataMatch ? dataMatch[1].trim() : '';
+            const vagas = vagasMatch ? vagasMatch[1].trim() : '';
+            const salario = salarioMatch ? salarioMatch[1].trim() : '';
+            const escolaridade = escolaridadeMatch ? escolaridadeMatch[1].trim() : '';
+
+            // Salvar no AppData
+            AppData.edital.dataProva = dataProva;
+            AppData.salvar();
+
+            // Salvar informações adicionais
+            const perfil = Storage.get('perfilUsuario', {});
+            perfil.vagas = vagas;
+            perfil.salario = salario;
+            perfil.escolaridade = escolaridade;
+            Storage.set('perfilUsuario', perfil);
+
+            console.log('✅ Dados salvos:', perfil);
+        }
+
+        // Carregar dados do perfil no Dashboard
+        function carregarDadosPerfil() {
+            const perfil = Storage.get('perfilUsuario', null);
+
+            if (!perfil) return;
+
+            // Atualizar campos do dashboard
+            document.getElementById('displayCargo').textContent = perfil.cargo || 'Não informado';
+            document.getElementById('displayDataProva').textContent = perfil.dataProva || AppData.edital.dataProva || 'Não informado';
+            document.getElementById('displayVagas').textContent = perfil.vagas || 'Não informado';
+            document.getElementById('displaySalario').textContent = perfil.salario || 'Não informado';
+            document.getElementById('displayOrgao').textContent = perfil.concurso || 'Não informado';
+            document.getElementById('displayEscolaridade').textContent = perfil.escolaridade || 'Não informado';
+        }
+
+        // Verificar se é primeira vez
+        function verificarPrimeiroAcesso() {
+            const perfil = Storage.get('perfilUsuario', null);
+
+            if (!perfil) {
+                // Primeira vez - mostrar onboarding
+                document.getElementById('onboardingScreen').style.display = 'block';
+                setupOnboardingPdf();
+            } else {
+                // Já tem perfil - carregar dados
+                carregarDadosPerfil();
+            }
+        }
+
+        // ========== FIM ONBOARDING FUNCTIONS ==========
+
         // Executar ao carregar página
+        verificarPrimeiroAcesso();
         inicializarApp();
 
         // PWA - Register Service Worker

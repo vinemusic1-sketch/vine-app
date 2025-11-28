@@ -633,6 +633,9 @@
                         <option value="kindle">📖 Kindle (Sépia)</option>
                         <option value="light">☀️ Claro</option>
                     </select>
+                    <button onclick="switchTab('config')" style="padding: 8px 16px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='var(--accent-primary)'; this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.background='var(--bg-secondary)'; this.style.borderColor='var(--border)';">
+                        ⚙️ Config
+                    </button>
                 </div>
             </div>
             <div class="tabs">
@@ -1344,6 +1347,125 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB: CONFIGURAÇÕES -->
+        <div id="config" class="tab-content">
+            <div class="card">
+                <h2>⚙️ Configurações da IA</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 25px;">
+                    Configure a integração com Google Gemini para análises mais potentes e independentes.
+                </p>
+
+                <!-- Status da API -->
+                <div id="geminiStatus" style="padding: 15px; border-radius: 8px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; background: var(--bg-tertiary); border: 2px solid var(--border);">
+                    <span style="font-size: 24px;">⚠️</span>
+                    <div>
+                        <strong style="color: var(--text-primary);">Google Gemini API não configurada</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--text-secondary);">Configure sua API Key abaixo para desbloquear recursos avançados</p>
+                    </div>
+                </div>
+
+                <!-- Configuração da API Key -->
+                <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 12px; border: 1px solid var(--border);">
+                    <h3 style="color: var(--accent-primary); margin-bottom: 15px;">🔑 API Key do Google Gemini</h3>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Sua API Key:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="password" id="geminiApiKey" placeholder="Cole sua API Key aqui (ex: AIzaSy...)" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-family: 'IBM Plex Mono', monospace; font-size: 14px;">
+                            <button onclick="toggleApiKeyVisibility()" style="padding: 12px 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text-primary); font-size: 14px;">
+                                👁️ Mostrar
+                            </button>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                            ⚠️ Sua API Key fica salva apenas no seu navegador. Nunca compartilhe com terceiros.
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Modelo:</label>
+                        <select id="geminiModel" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
+                            <option value="gemini-2.5-flash-latest">⚡ Gemini 2.5 Flash (Rápido e Barato - Recomendado)</option>
+                            <option value="gemini-2.0-pro-latest">🧠 Gemini 2.0 Pro (Balanceado)</option>
+                            <option value="gemini-3.0-pro-latest">🚀 Gemini 3.0 Pro (Máxima Performance)</option>
+                        </select>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                            💡 Flash é ideal para análise de editais: 1M tokens de contexto, super rápido e econômico
+                        </p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="salvarConfigGemini()" style="flex: 1; padding: 14px; background: var(--accent-primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            💾 Salvar Configuração
+                        </button>
+                        <button onclick="testarApiGemini()" style="flex: 1; padding: 14px; background: var(--accent-secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            🧪 Testar Conexão
+                        </button>
+                        <button onclick="limparConfigGemini()" style="padding: 14px 20px; background: var(--danger); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Como obter API Key -->
+                <div style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 25px; border-radius: 12px; margin-top: 25px; color: white;">
+                    <h3 style="margin-bottom: 15px;">📖 Como obter sua API Key GRATUITA</h3>
+                    <ol style="line-height: 2;">
+                        <li>Acesse <a href="https://aistudio.google.com/apikey" target="_blank" style="color: white; text-decoration: underline; font-weight: 600;">Google AI Studio</a></li>
+                        <li>Faça login com sua conta Google</li>
+                        <li>Clique em <strong>"Get API Key"</strong> ou <strong>"Create API Key"</strong></li>
+                        <li>Copie a chave gerada (começa com "AIza...")</li>
+                        <li>Cole aqui em cima e clique em <strong>"Salvar Configuração"</strong></li>
+                        <li>✅ Pronto! Teste a conexão e comece a usar</li>
+                    </ol>
+                    <p style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 14px;">
+                        <strong>💰 Totalmente Gratuito:</strong> Google oferece uma cota generosa gratuita mensalmente. Perfeito para análise de editais!
+                    </p>
+                </div>
+
+                <!-- Recursos disponíveis -->
+                <div style="background: var(--bg-tertiary); padding: 25px; border-radius: 12px; margin-top: 25px; border: 1px solid var(--border);">
+                    <h3 style="color: var(--accent-primary); margin-bottom: 15px;">✨ Recursos com Gemini API</h3>
+                    <div style="display: grid; gap: 15px;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 24px;">📚</span>
+                            <div>
+                                <strong style="color: var(--text-primary);">Análise de Editais Completos</strong>
+                                <p style="color: var(--text-secondary); margin: 5px 0 0 0; font-size: 14px;">1 milhão de tokens = editais gigantescos sem cortes</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 24px;">🔍</span>
+                            <div>
+                                <strong style="color: var(--text-primary);">Busca na Web Integrada</strong>
+                                <p style="color: var(--text-secondary); margin: 5px 0 0 0; font-size: 14px;">Pesquisa questões, concursos e conteúdos atualizados</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 24px;">⚡</span>
+                            <div>
+                                <strong style="color: var(--text-primary);">Super Rápido</strong>
+                                <p style="color: var(--text-secondary); margin: 5px 0 0 0; font-size: 14px;">Flash mode: respostas em segundos</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 24px;">🔒</span>
+                            <div>
+                                <strong style="color: var(--text-primary);">100% Privado</strong>
+                                <p style="color: var(--text-secondary); margin: 5px 0 0 0; font-size: 14px;">Tudo funciona direto no seu navegador</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 24px;">🎯</span>
+                            <div>
+                                <strong style="color: var(--text-primary);">Independente do Poe</strong>
+                                <p style="color: var(--text-secondary); margin: 5px 0 0 0; font-size: 14px;">Funciona em qualquer lugar: localhost, Netlify, Vercel, etc.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de Confirmação -->
@@ -1571,6 +1693,192 @@
 
             setTimeout(() => notification.remove(), 3000);
         }
+
+        // ========== GOOGLE GEMINI API FUNCTIONS ==========
+
+        // Toggle visibilidade da API Key
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('geminiApiKey');
+            const button = event.target;
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈 Ocultar';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️ Mostrar';
+            }
+        }
+
+        // Salvar configuração do Gemini
+        function salvarConfigGemini() {
+            const apiKey = document.getElementById('geminiApiKey').value.trim();
+            const model = document.getElementById('geminiModel').value;
+
+            if (!apiKey) {
+                showNotification('⚠️ Por favor, insira uma API Key válida');
+                return;
+            }
+
+            if (!apiKey.startsWith('AIza')) {
+                showNotification('⚠️ API Key do Gemini deve começar com "AIza"');
+                return;
+            }
+
+            // Salvar no localStorage
+            Storage.set('geminiConfig', {
+                apiKey: apiKey,
+                model: model,
+                savedAt: new Date().toISOString()
+            });
+
+            atualizarStatusGemini();
+            showNotification('✅ Configuração do Gemini salva com sucesso!');
+        }
+
+        // Limpar configuração
+        function limparConfigGemini() {
+            showConfirmDialog(
+                'Tem certeza que deseja remover a configuração do Gemini?',
+                () => {
+                    Storage.remove('geminiConfig');
+                    document.getElementById('geminiApiKey').value = '';
+                    document.getElementById('geminiModel').value = 'gemini-2.5-flash-latest';
+                    atualizarStatusGemini();
+                    showNotification('🗑️ Configuração do Gemini removida');
+                }
+            );
+        }
+
+        // Atualizar status visual
+        function atualizarStatusGemini() {
+            const config = Storage.get('geminiConfig', null);
+            const statusDiv = document.getElementById('geminiStatus');
+
+            if (config && config.apiKey) {
+                statusDiv.innerHTML = `
+                    <span style="font-size: 24px;">✅</span>
+                    <div>
+                        <strong style="color: var(--success);">Google Gemini API configurada</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--text-secondary);">
+                            Modelo: ${config.model.replace('gemini-', '').replace('-latest', '')} |
+                            Salvo em: ${new Date(config.savedAt).toLocaleString('pt-BR')}
+                        </p>
+                    </div>
+                `;
+                statusDiv.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1))';
+                statusDiv.style.borderColor = 'var(--success)';
+
+                // Preencher campos
+                document.getElementById('geminiApiKey').value = config.apiKey;
+                document.getElementById('geminiModel').value = config.model;
+            } else {
+                statusDiv.innerHTML = `
+                    <span style="font-size: 24px;">⚠️</span>
+                    <div>
+                        <strong style="color: var(--text-primary);">Google Gemini API não configurada</strong>
+                        <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--text-secondary);">Configure sua API Key abaixo para desbloquear recursos avançados</p>
+                    </div>
+                `;
+                statusDiv.style.background = 'var(--bg-tertiary)';
+                statusDiv.style.borderColor = 'var(--border)';
+            }
+        }
+
+        // Testar conexão com Gemini
+        async function testarApiGemini() {
+            const config = Storage.get('geminiConfig', null);
+
+            if (!config || !config.apiKey) {
+                showNotification('⚠️ Configure a API Key primeiro');
+                return;
+            }
+
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Testando...';
+            button.disabled = true;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: 'Responda apenas: OK'
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Erro desconhecido');
+                }
+
+                const data = await response.json();
+                console.log('Resposta do Gemini:', data);
+
+                showNotification('✅ Conexão com Gemini estabelecida com sucesso!');
+
+            } catch (error) {
+                console.error('Erro ao testar Gemini:', error);
+                showNotification('❌ Erro: ' + error.message);
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Função para chamar API do Gemini
+        async function callGeminiAPI(prompt, options = {}) {
+            const config = Storage.get('geminiConfig', null);
+
+            if (!config || !config.apiKey) {
+                throw new Error('Gemini API não configurada');
+            }
+
+            const model = options.model || config.model;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: options.temperature || 0.7,
+                        topK: options.topK || 40,
+                        topP: options.topP || 0.95,
+                        maxOutputTokens: options.maxOutputTokens || 8192,
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.candidates || data.candidates.length === 0) {
+                throw new Error('Nenhuma resposta gerada pelo Gemini');
+            }
+
+            const text = data.candidates[0].content.parts[0].text;
+            return text;
+        }
+
+        // ========== FIM GEMINI API FUNCTIONS ==========
 
         document.getElementById('startTimer').addEventListener('click', startTimer);
         document.getElementById('pauseTimer').addEventListener('click', pauseTimer);
@@ -2224,7 +2532,55 @@
             const outputEl = document.getElementById('editalOutput');
             outputEl.innerHTML = `<div class="loading-message"><div class="loading-spinner"></div> Analisando edital...</div>`;
 
-            // Try Poe API first
+            // PRIORIDADE 1: Tentar Google Gemini API (se configurado)
+            const geminiConfig = Storage.get('geminiConfig', null);
+            if (geminiConfig && geminiConfig.apiKey) {
+                console.log('🚀 Usando Google Gemini API...');
+                const prompt = `Você é um especialista em análise de editais de concursos públicos. Analise o seguinte texto do edital e forneça informações claras e organizadas:
+
+${input}
+
+Por favor, organize sua resposta de forma clara, destacando:
+- Disciplinas e conteúdos programáticos
+- Pesos e número de questões (se mencionado)
+- Datas importantes (principalmente DATA DA PROVA)
+- Requisitos e informações relevantes
+- Dicas de estudo baseadas no edital`;
+
+                try {
+                    const response = await callGeminiAPI(prompt, {
+                        maxOutputTokens: 8192,
+                        temperature: 0.7
+                    });
+
+                    outputEl.innerHTML = `
+                        <div style="padding: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--success);">
+                            <strong style="color: var(--success);">✅ Análise gerada por Google Gemini ${geminiConfig.model.replace('gemini-', '').replace('-latest', '')}</strong>
+                        </div>
+                        <div class="ai-response">${response.replace(/\n/g, '<br>')}</div>
+                    `;
+
+                    // Save the analysis
+                    savedEditais.push({
+                        id: Date.now(),
+                        date: new Date().toLocaleString('pt-BR'),
+                        input: input.substring(0, 200) + '...',
+                        response: response
+                    });
+                    Storage.set('savedEditais', savedEditais);
+                    renderSavedEditais();
+
+                    showNotification('✅ Análise concluída com Gemini!');
+                    return;
+
+                } catch (err) {
+                    console.log('❌ Gemini falhou:', err.message);
+                    console.log('Tentando Poe API...');
+                    // Continue para tentar Poe
+                }
+            }
+
+            // PRIORIDADE 2: Tentar Poe API
             if (window.Poe) {
                 const prompt = `Você é um especialista em análise de editais de concursos públicos. Analise o seguinte texto/pergunta e forneça informações claras e organizadas:
 
@@ -2249,7 +2605,7 @@ Por favor, organize sua resposta de forma clara, destacando:
                 }
             }
 
-            // Fallback: Offline intelligent analysis
+            // PRIORIDADE 3: Fallback offline intelligent analysis
             setTimeout(() => {
                 try {
                     console.log('Iniciando análise offline...');
@@ -6255,6 +6611,11 @@ INSTRUÇÕES:
 
             // 4. Atualizar dashboard
             updateDashboard();
+
+            // 5. Atualizar status do Gemini (se a aba de config existir)
+            if (document.getElementById('geminiStatus')) {
+                atualizarStatusGemini();
+            }
 
             console.log('🚀 App inicializado');
         }

@@ -6526,12 +6526,24 @@ INSTRUÇÕES:
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
             // Add active to selected tab
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+            const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+
+            const tabContent = document.getElementById(tabName);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
 
             // Se mudou para aba de estatísticas, atualizar histórico de medalhas
             if (tabName === 'estatisticas') {
                 atualizarHistoricoMedalhasEstatisticas();
+            }
+
+            // Se mudou para aba de configurações, atualizar status do Gemini
+            if (tabName === 'config') {
+                atualizarStatusGemini();
             }
         }
 

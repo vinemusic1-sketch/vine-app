@@ -1754,6 +1754,12 @@
             const config = Storage.get('geminiConfig', null);
             const statusDiv = document.getElementById('geminiStatus');
 
+            // Se o elemento não existe ainda, não fazer nada
+            if (!statusDiv) {
+                console.log('⚠️ Elemento geminiStatus não encontrado');
+                return;
+            }
+
             if (config && config.apiKey) {
                 statusDiv.innerHTML = `
                     <span style="font-size: 24px;">✅</span>
@@ -1768,9 +1774,11 @@
                 statusDiv.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1))';
                 statusDiv.style.borderColor = 'var(--success)';
 
-                // Preencher campos
-                document.getElementById('geminiApiKey').value = config.apiKey;
-                document.getElementById('geminiModel').value = config.model;
+                // Preencher campos (verificar se existem)
+                const apiKeyInput = document.getElementById('geminiApiKey');
+                const modelSelect = document.getElementById('geminiModel');
+                if (apiKeyInput) apiKeyInput.value = config.apiKey;
+                if (modelSelect) modelSelect.value = config.model;
             } else {
                 statusDiv.innerHTML = `
                     <span style="font-size: 24px;">⚠️</span>
@@ -6623,11 +6631,6 @@ INSTRUÇÕES:
 
             // 4. Atualizar dashboard
             updateDashboard();
-
-            // 5. Atualizar status do Gemini (se a aba de config existir)
-            if (document.getElementById('geminiStatus')) {
-                atualizarStatusGemini();
-            }
 
             console.log('🚀 App inicializado');
         }
